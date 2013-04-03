@@ -17,7 +17,7 @@
 
 /**
  * This is the MetaModelFilterRule class for handling select fields.
- * 
+ *
  * @package	   MetaModels
  * @subpackage AttributeTags
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
@@ -37,7 +37,7 @@ class MetaModelFilterRuleTags extends MetaModelFilterRule
 		$strTableNameId = $this->objAttribute->get('tag_table');
 		$strColNameId = $this->objAttribute->get('tag_id');
 		$strColNameAlias = $this->objAttribute->get('tag_alias');
-		
+
 		$arrValues = is_array($this->value) ? $this->value : explode(',', $this->value);
 
 		$objDB = Database::getInstance();
@@ -60,7 +60,7 @@ class MetaModelFilterRuleTags extends MetaModelFilterRule
 	public function getMatchingIds()
 	{
 		$arrValues = $this->sanitizeValue();
-		
+
 		$objDB = Database::getInstance();
 		$objMatches = $objDB->prepare('SELECT item_id as id FROM tl_metamodel_tag_relation WHERE value_id IN (' . implode(',', $arrValues) . ') AND att_id = ?')->execute($this->objAttribute->get('id'));
 		return $objMatches->fetchEach('id');

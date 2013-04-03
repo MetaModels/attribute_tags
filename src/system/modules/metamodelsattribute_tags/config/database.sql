@@ -21,6 +21,16 @@ CREATE TABLE `tl_metamodel_attribute` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- 
+-- Table `tl_metamodel_rendersetting`
+-- 
+
+CREATE TABLE `tl_metamodel_rendersetting` (
+  `tags_display` varchar(255) NOT NULL default '',
+  `tags_rendersettings` int(10) NOT NULL default '0',
+  `tags_jumpTo` text NULL,
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- 
 -- Table `tl_metamodel_tag_relation`
 -- 
 

@@ -99,20 +99,20 @@ class TableMetaModelRenderSettingTags extends TableMetaModelRenderSetting {
 	}
 
 	public function getMetaModel($objDC) {
-		if($objDC->id) {
+		if($this->Input->get('pid')) {
+			$intModel = $this->Database->prepare(
+				'SELECT	rs.pid
+				FROM	tl_metamodel_rendersettings AS rs
+				WHERE	rs.id = ?'
+			)->execute($this->Input->get('pid'))->pid;
+
+		} elseif($objDC->id) {
 			$intModel = $this->Database->prepare(
 				'SELECT	rs.pid
 				FROM	tl_metamodel_rendersettings AS rs
 				JOIN	tl_metamodel_rendersetting AS r ON r.pid = rs.id
 				WHERE	r.id = ?'
 			)->execute($objDC->id)->pid;
-
-		} elseif($this->Input->get('pid')) {
-			$intModel = $this->Database->prepare(
-				'SELECT	rs.pid
-				FROM	tl_metamodel_rendersettings AS rs
-				WHERE	rs.id = ?'
-			)->execute($this->Input->get('pid'))->pid;
 		}
 
 		$objMetaModel = MetaModelFactory::byId($intModel);

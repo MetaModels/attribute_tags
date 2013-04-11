@@ -11,6 +11,7 @@
  * @subpackage AttributeTags
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Christian de la Haye <service@delahaye.de>
+ * @author     Oliver Hoff <oliver@hofff.com>
  * @copyright  The MetaModels team.
  * @license    LGPL.
  * @filesource
@@ -23,6 +24,7 @@
  * @subpackage AttributeTags
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Christian de la Haye <service@delahaye.de>
+ * @author     Oliver Hoff <oliver@hofff.com>
  */
 class MetaModelAttributeTags extends MetaModelAttributeComplex
 {
@@ -35,6 +37,31 @@ class MetaModelAttributeTags extends MetaModelAttributeComplex
 		parent::prepareTemplate($objTemplate, $arrRowData, $objSettings);
 		$objTemplate->alias = $this->get('tag_alias');
 		$objTemplate->value = $this->get('tag_column');
+
+		if(!$objSettings) {
+			return;
+		}
+
+		switch($objSettings->tags_display) {
+			case 'rendersettings':
+				$objMetaModel = $this->getTagTableMetaModel(true);
+				$objList = new MetaModelListTags();
+				$objTemplate->rendered = $objList
+					->setMetaModel($objMetaModel->get('id'), $objSettings->tags_rendersettings)
+					->setTagAttribute($this)
+					->setTagIDs(array_keys((array) $arrRowData[$this->getColName()]))
+					->prepare()
+					->render(false, $this);
+				break;
+		}
+	}
+
+	public function getTagTableMetaModel($blnRequire = false) {
+		$objMetaModel = MetaModelFactory::byTableName($this->get('tag_table'));
+		if($blnRequire && !$objMetaModel) {
+			throw new Exception('metamodel "' . $this->get('tag_table') . '" not found, but required');
+		}
+		return $objMetaModel;
 	}
 
 	/**

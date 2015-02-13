@@ -176,15 +176,19 @@ class MetaModelTags extends AbstractTags
     protected function calculateFilterOptionsCount($items, &$amountArray)
     {
         $ids = array();
+        $alias = array();
         foreach ($items as $item) {
             $ids[] = $item->get('id');
+            if ($this->getAliasColumn()) {
+                $alias[$item->get('id')] = $item->get($this->getAliasColumn());
+            }
         }
 
         $counts = $this
             ->getDatabase()
             ->prepare(
                 sprintf(
-                    'SELECT COUNT(value_id) AS amount FROM %1$s WHERE att_id="%2$s" AND value_id IN (%3$s)',
+                    'SELECT value_id,COUNT(value_id) AS amount FROM %1$s WHERE att_id="%2$s" AND value_id IN (%3$s) GROUP BY value_id',
                     $this->getReferenceTable(),
                     $this->get('id'),
                     implode(',', array_fill(0, count($ids), '?'))
@@ -193,8 +197,13 @@ class MetaModelTags extends AbstractTags
             ->execute($ids);
 
         while ($counts->next()) {
-            /** @noinspection PhpUndefinedFieldInspection */
-            $amountArray[$counts->value_id] = $counts->amount;
+            if (!empty($alias)) {
+                /** @noinspection PhpUndefinedFieldInspection */
+                $amountArray[$alias[$counts->value_id]] = $counts->amount;
+            } else {
+                /** @noinspection PhpUndefinedFieldInspection */
+                $amountArray[$counts->value_id] = $counts->amount;
+            }
         }
     }
 

@@ -180,6 +180,9 @@ class MetaModelTags extends AbstractTags
         foreach ($items as $item) {
             $ids[] = $item->get('id');
         }
+        if (empty($ids)) {
+            return;
+        }
 
         if ($ids) {
             $filter = sprintf(' AND value_id IN (%1$s)', $this->parameterMask($ids));

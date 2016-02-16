@@ -96,12 +96,16 @@ class MetaModelTags extends AbstractTags
         unset($tables[$recursionKey]);
 
         $values = array();
+        $count  = 0;
         foreach ($items as $item) {
             $valueId    = $item->get('id');
             $parsedItem = $item->parseValue();
 
             $values[$valueId] = array_merge(
-                array(self::TAGS_RAW => $parsedItem['raw']),
+                array(
+                    self::TAGS_RAW => $parsedItem['raw'],
+                    'tag_value_sorting' => $count++
+                ),
                 $parsedItem['text']
             );
         }

@@ -27,6 +27,7 @@
 namespace MetaModels\Filter\Rules;
 
 use MetaModels\Attribute\Tags\AbstractTags;
+use MetaModels\Attribute\Tags\MetaModelTags;
 use MetaModels\Filter\FilterRule;
 use MetaModels\IMetaModel;
 
@@ -60,19 +61,13 @@ class FilterRuleTags extends FilterRule
     protected $objSelectMetaModel;
 
     /**
-     * Checking for the reference is a MetaModel.
-     *
-     * @param string $table The name of the table.
+     * Check if the reference is a MetaModel.
      *
      * @return bool
      */
-    protected function isMetaModel($table)
+    protected function isMetaModel()
     {
-        if ((substr($table, 0, 3) == 'mm_')) {
-            return true;
-        }
-
-        return false;
+        return $this->objAttribute instanceof MetaModelTags;
     }
 
     /**
@@ -112,16 +107,15 @@ class FilterRuleTags extends FilterRule
      */
     public function sanitizeValue()
     {
-        $strTableNameId  = $this->objAttribute->get('tag_table');
         $strColNameId    = $this->objAttribute->get('tag_id') ?: 'id';
         $strColNameAlias = $this->objAttribute->get('tag_alias');
+        $arrValues       = is_array($this->value) ? $this->value : explode(',', $this->value);
 
-        $arrValues = is_array($this->value) ? $this->value : explode(',', $this->value);
-
-        $objDB = $this->objAttribute->getMetaModel()->getServiceContainer()->getDatabase();
-
-        if (!$this->isMetaModel($strTableNameId)) {
+        if (!$this->isMetaModel()) {
             if ($strColNameAlias) {
+                $strTableNameId = $this->objAttribute->get('tag_table');
+                $objDB          = $this->objAttribute->getMetaModel()->getServiceContainer()->getDatabase();
+
                 $objSelectIds = $objDB
                     ->prepare(
                         sprintf(

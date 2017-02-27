@@ -116,18 +116,23 @@ class FilterRuleTags extends FilterRule
             if ($strColNameAlias) {
                 $strTableNameId = $this->objAttribute->get('tag_table');
                 $objDB          = $this->objAttribute->getMetaModel()->getServiceContainer()->getDatabase();
-
-                $objSelectIds = $objDB
+                $objSelectIds   = $objDB
                     ->prepare(
                         sprintf(
-                            'SELECT %1$s FROM %2$s WHERE %3$s IN (%4$s)',
+                            'SELECT %1$s FROM %2$s WHERE %3$s',
                             $strColNameId,
                             $strTableNameId,
-                            $strColNameAlias,
-                            implode(',', array_fill(0, count($arrValues), '?'))
+                            implode(' OR ', array_fill(0, count($arrValues), $strColNameAlias . ' LIKE ?'))
                         )
                     )
-                    ->execute($arrValues);
+                    ->execute(
+                        array_map(
+                            function ($value) {
+                                return str_replace(array('*', '?'), array('%', '_'), $value);
+                            },
+                            $arrValues
+                        )
+                    );
 
                 $arrValues = $objSelectIds->fetchEach($strColNameId);
             } else {

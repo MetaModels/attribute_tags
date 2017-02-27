@@ -443,11 +443,10 @@ class MetaModelTags extends AbstractTags
 
             $result[$aliasValue] = $textValue;
 
-            if (null !== $count) {
-                if (isset($count[$item->get('id')])) {
-                    $count[$aliasValue] = $count[$item->get('id')];
-                    unset($count[$item->get('id')]);
-                }
+            // Clean the count array if alias is different from id value.
+            if (null !== $count && isset($count[$item->get('id')]) && $aliasValue !== $item->get('id')) {
+                $count[$aliasValue] = $count[$item->get('id')];
+                unset($count[$item->get('id')]);
             }
         }
 

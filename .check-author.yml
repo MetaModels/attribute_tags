@@ -1,6 +1,5 @@
 ignore:
-  - "Mini Model <minimodel@metamodel.me>"
-  - "Scrutinizer Auto-Fixer <auto-fixer@scrutinizer-ci.com>"
+#  Mini Model <minimodel@metamodel.me>
 
 exclude:
   languages
@@ -14,5 +13,5 @@ mapping:
     - "Stefan Heimes <cms@men-at-work.de>"
   "David Maack <david.maack@arcor.de>":
     - "David Maack <maack@men-at-work.de>"
-  Christopher Boelter <christopher@boelter.eu>: cboelter <christopher@boelter.eu>
-  Patrick Heller <ph@wacg.de>: ph <ph@wacg.de>
+  "Christopher Boelter <christopher@boelter.eu>": "cboelter <christopher@boelter.eu>"
+  "Patrick Heller <ph@wacg.de>": "ph <ph@wacg.de>"

@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2015 The MetaModels team.
+ * (c) 2012-2017 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -19,7 +19,8 @@
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Martin Treml <github@r2pi.net>
  * @author     Patrick Heller <ph@wacg.de>
- * @copyright  2012-2015 The MetaModels team.
+ * @author     Ingolf Steinhardt <info@e-spin.de>
+ * @copyright  2012-2017 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0
  * @filesource
  */
@@ -115,25 +116,29 @@ class FilterRuleTags extends FilterRule
             if ($strColNameAlias) {
                 $strTableNameId = $this->objAttribute->get('tag_table');
                 $objDB          = $this->objAttribute->getMetaModel()->getServiceContainer()->getDatabase();
-
-                $objSelectIds = $objDB
+                $objSelectIds   = $objDB
                     ->prepare(
                         sprintf(
-                            'SELECT %1$s FROM %2$s WHERE %3$s IN (%4$s)',
+                            'SELECT %1$s FROM %2$s WHERE %3$s',
                             $strColNameId,
                             $strTableNameId,
-                            $strColNameAlias,
-                            implode(',', array_fill(0, count($arrValues), '?'))
+                            implode(' OR ', array_fill(0, count($arrValues), $strColNameAlias . ' LIKE ?'))
                         )
                     )
-                    ->execute($arrValues);
+                    ->execute(
+                        array_map(
+                            function ($value) {
+                                return str_replace(array('*', '?'), array('%', '_'), $value);
+                            },
+                            $arrValues
+                        )
+                    );
 
                 $arrValues = $objSelectIds->fetchEach($strColNameId);
             } else {
                 $arrValues = array_map('intval', $arrValues);
             }
         } else {
-            // Fixme: Just a temporary hack. We should use the attribute for this.
             if ($strColNameAlias == 'id') {
                 $values = $arrValues;
             } else {

@@ -285,6 +285,35 @@ class MetaModelTags extends AbstractTags
         if (!$this->isFilterOptionRetrievingPossible($idList)) {
             return array();
         }
+        if (!$idList&&!$this->get('tag_filter')) {
+
+            //try get result from cache
+          if(!$objDatabase){
+               $objDatabase              = \Database::getInstance(); 
+            }
+            $objCache = $this->getMetaModel()->getServiceContainer()->getCache();
+            $arrRowsCount = $objDatabase->query("SHOW TABLE STATUS LIKE '".$this->getTagMetaModel()->getTableName()."'")->fetchEach("Rows");
+
+            $deleteTableCache  = false;
+            $cacheKeyRowsCount = $this->getTagMetaModel()->getTableName().'_lastcount';
+            $lastCount = ($objCache->contains($cacheKeyRowsCount) === true)? $objCache->fetch($cacheKeyRowsCount):false;
+
+             //var_dump($lastCount,$arrRowsCount[0]);
+            if($lastCount !== $arrRowsCount[0] && $lastCount !== false) {
+                    $deleteTableCache = true;
+                    $cacheKeyOfTagTableOld = $this->getMetaModel()->getTableName().$this->getTagMetaModel()->getTableName().'_tagoptions_'.$_SESSION["BE_DATA"]["new_records"]["tl_user"][0].$lastCount;
+            }
+            if($lastCount !== $arrRowsCount[0]){
+                $objCache->save($cacheKeyRowsCount,$arrRowsCount[0]); 
+            }
+     
+            $cacheKeyOfTagTable = $this->getMetaModel()->getTableName().$this->getTagMetaModel()->getTableName().'_tagoptions_'.$_SESSION["BE_DATA"]["new_records"]["tl_user"][0].$arrRowsCount[0];
+          //var_dump($objCache->contains($cacheKeyRowsCount));
+            if ($objCache->contains($cacheKeyOfTagTable) === true && $deleteTableCache === false) {
+              //var_dump($objCache->delete($cacheKeyOfTagTable));  
+                return deserialize($objCache->fetch($cacheKeyOfTagTable));
+            }         
+        }
         $strDisplayValue = $this->getValueColumn();
         $strSortingValue = $this->getSortingColumn();
 
@@ -305,7 +334,13 @@ class MetaModelTags extends AbstractTags
             $this->calculateFilterOptionsCount($objItems, $arrCount);
         }
 
-        return $this->convertItemsToFilterOptions($objItems, $strDisplayValue, $this->getAliasColumn(), $arrCount);
+        $result = $this->convertItemsToFilterOptions($objItems, $strDisplayValue, $this->getAliasColumn(), $arrCount);
+
+        if (!$idList &&!$this->get('tag_filter')&& $objCache->contains($cacheKeyOfTagTable) === false) {  
+              if($deleteTableCache === true && $objCache->contains($cacheKeyOfTagTableOld) === true){ $objCache->delete($cacheKeyOfTagTableOld);}
+               $objCache->save($cacheKeyOfTagTable,serialize($result));
+        }
+        return $result;
     }
 
     /**

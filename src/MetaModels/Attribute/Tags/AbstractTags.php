@@ -16,6 +16,7 @@
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
  * @copyright  2012-2017 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0
  * @filesource
@@ -25,8 +26,8 @@ namespace MetaModels\Attribute\Tags;
 
 use Contao\Database\Result;
 use MetaModels\Attribute\BaseComplex;
-use MetaModels\Render\Template;
 use MetaModels\Filter\Rules\FilterRuleTags;
+use MetaModels\Render\Template;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -58,6 +59,16 @@ abstract class AbstractTags extends BaseComplex
     }
 
     /**
+     * Determine if this widget a checkbox wizard.
+     *
+     * @return bool
+     */
+    protected function isCheckboxWizard()
+    {
+        return $this->widgetMode == 1;
+    }
+
+    /**
      * Determine if we want to use tree selection.
      *
      * @return bool
@@ -85,6 +96,16 @@ abstract class AbstractTags extends BaseComplex
     protected function getIdColumn()
     {
         return $this->get('tag_id') ?: 'id';
+    }
+
+    /**
+     * Determine the correct sort direction to use.
+     *
+     * @return string
+     */
+    protected function getSortDirection()
+    {
+        return $this->get('tag_sort');
     }
 
     /**
@@ -219,6 +240,7 @@ abstract class AbstractTags extends BaseComplex
                 'tag_where',
                 'tag_filter',
                 'tag_filterparams',
+                'tag_sort',
                 'tag_sorting',
                 'tag_as_wizard',
                 'tag_minLevel',

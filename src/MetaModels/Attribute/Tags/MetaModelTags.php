@@ -21,6 +21,7 @@
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
  * @copyright  2012-2017 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0
  * @filesource
@@ -29,11 +30,12 @@
 namespace MetaModels\Attribute\Tags;
 
 use MetaModels\Attribute\ITranslated;
-use MetaModels\Filter\Rules\StaticIdList;
 use MetaModels\Filter\IFilter;
+use MetaModels\Filter\Rules\StaticIdList;
 use MetaModels\IItem;
 use MetaModels\IItems;
 use MetaModels\IMetaModel;
+use MetaModels\Items;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -97,8 +99,21 @@ class MetaModelTags extends AbstractTags
         }
         $tables[$recursionKey] = $recursionKey;
 
-        $items = $metaModel->findByFilter($filter, $this->getSortingColumn());
+        $items = $metaModel->findByFilter($filter, $this->getSortingColumn(), 0, 0, $this->getSortDirection());
         unset($tables[$recursionKey]);
+
+        // Sort items manuel for checkbox wizard.
+        if ($this->isCheckboxWizard()) {
+            $orderIds = array_flip($valueIds);
+
+            foreach ($items as $item) {
+                $orderIds[$item->get('id')] = $item;
+            }
+
+            $orderItems = new Items(array_reverse(array_reverse($orderIds)));
+
+            $items = $orderItems;
+        }
 
         $values = array();
         $count  = 0;
@@ -132,7 +147,28 @@ class MetaModelTags extends AbstractTags
         // Add some more filter rules.
         $filter->addFilterRule(new StaticIdList(array_keys($idList)));
 
-        $items = $this->getTagMetaModel()->findByFilter($filter, $this->getSortingColumn());
+        $items = $this->getTagMetaModel()->findByFilter(
+            $filter,
+            $this->getSortingColumn(),
+            0,
+            0,
+            $this->getSortDirection()
+        );
+
+        // Sort items manuel for checkbox wizard.
+        if ($this->isCheckboxWizard()) {
+            $orderIds = array_flip(array_keys($idList));
+
+            foreach ($items as $item) {
+                $orderIds[$item->get('id')] = $item;
+            }
+
+            $orderItems = new Items(array_reverse(array_reverse($orderIds)));
+
+            return array_keys(
+                $this->convertItemsToFilterOptions($orderItems, $this->getValueColumn(), $this->getAliasColumn())
+            );
+        }
 
         return array_keys(
             $this->convertItemsToFilterOptions($items, $this->getValueColumn(), $this->getAliasColumn())
@@ -285,8 +321,6 @@ class MetaModelTags extends AbstractTags
         if (!$this->isFilterOptionRetrievingPossible($idList)) {
             return array();
         }
-        $strDisplayValue = $this->getValueColumn();
-        $strSortingValue = $this->getSortingColumn();
 
         $filter = $this->getTagMetaModel()->getEmptyFilter();
 
@@ -299,13 +333,24 @@ class MetaModelTags extends AbstractTags
             $filter->addFilterRule(new StaticIdList($idList));
         }
 
-        $objItems = $this->getTagMetaModel()->findByFilter($filter, $strSortingValue);
+        $objItems = $this->getTagMetaModel()->findByFilter(
+            $filter,
+            $this->getSortingColumn(),
+            0,
+            0,
+            $this->getSortDirection()
+        );
 
         if ($arrCount !== null) {
             $this->calculateFilterOptionsCount($objItems, $arrCount);
         }
 
-        return $this->convertItemsToFilterOptions($objItems, $strDisplayValue, $this->getAliasColumn(), $arrCount);
+        return $this->convertItemsToFilterOptions(
+            $objItems,
+            $this->getValueColumn(),
+            $this->getAliasColumn(),
+            $arrCount
+        );
     }
 
     /**

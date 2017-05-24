@@ -18,6 +18,7 @@
  * @author     Andreas Isaak <info@andreas-isaak.de>
  * @author     David Maack <david.maack@arcor.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
  * @copyright  2012-2017 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0
  * @filesource
@@ -36,6 +37,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['metapalettes']['tags extends _simp
         'tag_id',
         'tag_alias',
         'tag_sorting',
+        'tag_sort',
         'tag_where',
         'tag_filter',
         'tag_filterparams'
@@ -117,7 +119,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sorting'] = array
         'doNotSaveEmpty'     => true,
         'alwaysSave'         => true,
         'submitOnChange'     => true,
-        'tl_class'           => 'w50',
+        'tl_class'           => 'w50 clr',
         'chosen'             => 'true'
     ),
 );
@@ -159,4 +161,18 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filterparams'] = arr
     (
         'tl_class'   => 'clr m12'
     )
+);
+
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sort'] = array
+(
+    'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort'],
+    'exclude'   => true,
+    'inputType' => 'select',
+    'options'   => array('asc', 'desc'),
+    'eval'      => array
+    (
+        'tl_class' => 'w50',
+    ),
+    'reference' => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort_directions'],
+    'sql'       => "varchar(10) NOT NULL default 'asc'"
 );

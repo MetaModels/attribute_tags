@@ -85,4 +85,32 @@ class TagsTest extends \PHPUnit_Framework_TestCase
         $text = new MetaModelTags($this->mockMetaModel('en', 'en'));
         $this->assertInstanceOf('MetaModels\Attribute\Tags\MetaModelTags', $text);
     }
+
+    /**
+     * Test the value to widget method in tree picker mode.
+     *
+     * @return void
+     */
+    public function testValueToWidgetForTreePicker()
+    {
+        $tags = new Tags(
+            $this->mockMetaModel('en', 'en'),
+            [
+                'colname' => 'tags',
+                'tag_alias' => 'alias'
+            ]
+        );
+
+        // Trick attribute into thinking we have a backend running and enable tree picker.
+        $tags->getFieldDefinition([
+            'tag_as_wizard' => 2,
+            'tag_minLevel' => null,
+            'tag_maxLevel' => null
+        ]);
+
+        $result = $tags->valueToWidget([['alias' => 'alias-value', 'id' => 1], ['alias' => 'alias-value2', 'id' => 2]]);
+
+        // It should return the ids instead of the alias.
+        $this->assertSame('1,2', $result);
+    }
 }

@@ -8,7 +8,7 @@
  *
  * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
  *
- * last-updated: 2015-07-13T12:14:33+02:00
+ * last-updated: 2017-07-09T22:17:27+02:00
  */
 
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['display_legend']                 = 'Параметры вывода';
@@ -25,6 +25,10 @@ $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_filterparams']['0']          
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_filterparams']['1']          = 'Вы можете выбрать значение по умолчанию для фильтра.';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_id']['0']                    = 'ID тега';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_id']['1']                    = 'Выберите значение для ID тега.';
+$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort']['0']                  = 'Направление сортировки';
+$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort']['1']                  = 'Направление сортировки.';
+$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort_directions']['asc']     = 'По возрастанию';
+$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort_directions']['desc']    = 'По убыванию';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sorting']['0']               = 'Сортировка тегов';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sorting']['1']               = 'Выберите значение для сортировки тегов.';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_table']['0']                 = 'Таблица базы данных';

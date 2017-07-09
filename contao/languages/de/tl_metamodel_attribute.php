@@ -35,4 +35,8 @@ $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_table_type']['untranslated'] 
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_where']['0']                 = 'SQL';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_where']['1']                 = 'Die Auswahlmöglichkeiten können per SQL eingeschränkt werden.';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['typeOptions']['tags']            = 'Mehrfachauswahl';
+$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort']['0']                  = 'Sortierrichtung';
+$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort']['1']                  = 'Richtung der Sortierung.';
+$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort_directions']['asc']     = 'Aufsteigend';
+$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort_directions']['desc']    = 'Absteigend';
 

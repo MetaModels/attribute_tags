@@ -15,6 +15,7 @@
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Ingolf Steinhardt <info@e-spin.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
  * @copyright  2012-2017 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0
  * @filesource
@@ -23,6 +24,8 @@
 namespace MetaModels\DcGeneral\Events\MetaModels\Tags;
 
 use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\Event\GetPropertyOptionsEvent;
+use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\Event\ManipulateWidgetEvent;
+use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\TreePicker;
 use MetaModels\Attribute\Tags\AbstractTags;
 use MetaModels\DcGeneral\Data\Model;
 use MetaModels\DcGeneral\Events\BaseSubscriber;
@@ -37,7 +40,15 @@ class BackendSubscriber extends BaseSubscriber
      */
     public function registerEventsInDispatcher()
     {
-        $this->addListener(GetPropertyOptionsEvent::NAME, array($this, 'getPropertyOptions'));
+        $this
+            ->addListener(
+                GetPropertyOptionsEvent::NAME,
+                array($this, 'getPropertyOptions')
+            )
+            ->addListener(
+                ManipulateWidgetEvent::NAME,
+                array($this, 'manipulateTreePrickerForSortOrder')
+            );
     }
 
     /**
@@ -71,5 +82,44 @@ class BackendSubscriber extends BaseSubscriber
         }
 
         $event->setOptions($options);
+    }
+
+    /**
+     * Manipulate the tree picker for sort order.
+     *
+     * @param ManipulateWidgetEvent $event The event.
+     *
+     * @return void
+     */
+    public function manipulateTreePrickerForSortOrder(ManipulateWidgetEvent $event)
+    {
+        $widget = $event->getWidget();
+        if (!($widget instanceof TreePicker)) {
+            return;
+        }
+
+        $options = (array) $widget->options;
+        if (0 === count($options)) {
+            return;
+        }
+
+        $model = $event->getModel();
+        if (!($model instanceof Model)) {
+            return;
+        }
+
+        $attribute = $model->getItem()->getAttribute($widget->strField);
+        if (!($attribute instanceof AbstractTags)) {
+            return;
+        }
+
+        $widget->orderField = $widget->orderField . '__ordered';
+
+        $ordered = array();
+        foreach ($options as $option) {
+            $ordered[] = $option['value'];
+        }
+
+        $widget->{$widget->orderField} = $ordered;
     }
 }

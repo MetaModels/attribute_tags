@@ -16,6 +16,7 @@ CREATE TABLE `tl_metamodel_attribute` (
   `tag_column` varchar(255) NOT NULL default '',
   `tag_id` varchar(255) NOT NULL default '',
   `tag_alias` varchar(255) NOT NULL default '',
+  `tag_sort` varchar(10) NOT NULL default 'asc',
   `tag_sorting` varchar(255) NOT NULL default '',
   `tag_where` text NULL,
   `tag_filter` int(11) unsigned NOT NULL default '0',

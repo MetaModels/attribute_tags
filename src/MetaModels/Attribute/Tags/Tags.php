@@ -59,7 +59,7 @@ class Tags extends AbstractTags
 
         // If we have a tree picker, the value must be a comma separated string.
         if ($this->isTreePicker() && !empty($arrResult)) {
-            $arrResult = implode(',', $arrResult);
+            return implode(',', $arrResult);
         }
 
         // We must use string keys.

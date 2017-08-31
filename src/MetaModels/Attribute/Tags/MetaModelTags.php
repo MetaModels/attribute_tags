@@ -129,6 +129,11 @@ class MetaModelTags extends AbstractTags
                 $parsedItem['text']
             );
         }
+        $alias = $this->getAliasColumn();
+        foreach ($valueIds as $valueId) {
+            $values[$valueId][self::TAGS_RAW]['id'] = $valueId;
+            $values[$valueId][self::TAGS_RAW][$alias] = null;
+        }
 
         return $values;
     }
@@ -145,7 +150,7 @@ class MetaModelTags extends AbstractTags
         // Now sort the values according to our sorting column.
         $filter = $this->getTagMetaModel()->getEmptyFilter();
         // Add some more filter rules.
-        $filter->addFilterRule(new StaticIdList(array_keys($idList)));
+        $filter->addFilterRule(new StaticIdList($idList));
 
         $items = $this->getTagMetaModel()->findByFilter(
             $filter,
@@ -155,24 +160,26 @@ class MetaModelTags extends AbstractTags
             $this->getSortDirection()
         );
 
-        // Sort items manuel for checkbox wizard.
+        // Sort items manually for checkbox wizard.
         if ($this->isCheckboxWizard()) {
-            $orderIds = array_flip(array_keys($idList));
+            $orderIds = array_flip($idList);
 
             foreach ($items as $item) {
                 $orderIds[$item->get('id')] = $item;
             }
-
-            $orderItems = new Items(array_reverse(array_reverse($orderIds)));
-
-            return array_keys(
-                $this->convertItemsToFilterOptions($orderItems, $this->getValueColumn(), $this->getAliasColumn())
-            );
+            $items = new Items(array_values($orderIds));
         }
 
-        return array_keys(
-            $this->convertItemsToFilterOptions($items, $this->getValueColumn(), $this->getAliasColumn())
-        );
+        $result = [];
+        $aliasColumn = $this->getAliasColumn();
+        foreach ($items as $item) {
+            $parsedAlias = $item->parseAttribute($aliasColumn);
+            $result[$item->get('id')] = isset($parsedAlias['text']) ? $parsedAlias['text'] : $item->get($aliasColumn);
+        }
+        // Keep non existing ids
+        $result = array_merge($result, array_diff($idList, array_keys($result)));
+
+        return $result;
     }
 
     /**
@@ -185,24 +192,13 @@ class MetaModelTags extends AbstractTags
             return array();
         }
 
-        $aliasColumn = $this->getAliasColumn();
-        $arrResult   = array();
-
-        if ($varValue) {
-            foreach ($varValue as $arrValue) {
-                $aliasValue = isset($arrValue[$aliasColumn]) && !empty($arrValue[$aliasColumn])
-                    ? $arrValue[$aliasColumn]
-                    : $arrValue[self::TAGS_RAW][$aliasColumn];
-
-                if (!empty($aliasValue)) {
-                    $arrResult[$arrValue[self::TAGS_RAW]['id']] = $aliasValue;
-                }
-            }
+        $ids = array();
+        foreach ($varValue as $arrValue) {
+            $ids[] = $arrValue[self::TAGS_RAW]['id'];
         }
 
         // Sorting of values must be done.
-        $arrResult = $this->sortIdsBySortingColumn($arrResult);
-
+        $arrResult = $this->sortIdsBySortingColumn($ids);
         if ($this->isTreePicker()) {
             return implode(',', $arrResult);
         }

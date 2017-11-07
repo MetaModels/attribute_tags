@@ -1,0 +1,552 @@
+<?php
+
+/**
+ * This file is part of MetaModels/attribute_tags.
+ *
+ * (c) 2012-2017 The MetaModels team.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * This project is provided in good faith and hope to be usable by anyone.
+ *
+ * @package    MetaModels
+ * @subpackage AttributeTags
+ * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Stefan Heimes <stefan_heimes@hotmail.com>
+ * @author     Christopher Boelter <christopher@boelter.eu>
+ * @author     Ingolf Steinhardt <info@e-spin.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
+ * @copyright  2012-2017 The MetaModels team.
+ * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0
+ * @filesource
+ */
+
+namespace MetaModels\AttributeTagsBundle\Attribute;
+
+use Contao\Database\Result;
+use Contao\System;
+use Doctrine\DBAL\Connection;
+use MetaModels\Attribute\BaseComplex;
+use MetaModels\AttributeTagsBundle\FilterRule\FilterRuleTags;
+use MetaModels\IMetaModel;
+use MetaModels\Render\Template;
+
+/**
+ * This is the MetaModelAttribute class for handling tag attributes.
+ */
+abstract class AbstractTags extends BaseComplex
+{
+    /**
+     * The widget mode to use.
+     *
+     * @var int
+     */
+    private $widgetMode;
+
+    /**
+     * Local cached flag if the attribute has been properly configured.
+     *
+     * @var bool
+     */
+    private $isProperlyConfigured;
+
+    /**
+     * The database connection.
+     *
+     * @var Connection
+     */
+    private $connection;
+
+    /**
+     * Instantiate an MetaModel attribute.
+     *
+     * Note that you should not use this directly but use the factory classes to instantiate attributes.
+     *
+     * @param IMetaModel $objMetaModel The MetaModel instance this attribute belongs to.
+     * @param array      $arrData      The information array, for attribute information, refer to documentation of
+     *                                 table tl_metamodel_attribute and documentation of the certain attribute
+     *                                 classes for information what values are understood.
+     * @param Connection $connection   The database connection.
+     */
+    public function __construct(IMetaModel $objMetaModel, array $arrData = [], Connection $connection = null)
+    {
+        parent::__construct($objMetaModel, $arrData);
+
+        if (null === $connection) {
+            // @codingStandardsIgnoreStart
+            @trigger_error(
+                'Connection is missing. It has to be passed in the constructor. Fallback will be dropped.',
+                E_USER_DEPRECATED
+            );
+            // @codingStandardsIgnoreEnd
+            $connection = System::getContainer()->get('database_connection');
+        }
+
+        $this->connection = $connection;
+    }
+
+    /**
+     * Retrieve connection.
+     *
+     * @return Connection
+     */
+    protected function getConnection()
+    {
+        return $this->connection;
+    }
+
+    /**
+     * Retrieve the database instance.
+     *
+     * @return \Database
+     *
+     * @deprecated Use getConnection()
+     */
+    protected function getDatabase()
+    {
+        return $this->getMetaModel()->getServiceContainer()->getDatabase();
+    }
+
+    /**
+     * Determine if this widget a checkbox wizard.
+     *
+     * @return bool
+     */
+    protected function isCheckboxWizard()
+    {
+        return $this->widgetMode == 1;
+    }
+
+    /**
+     * Determine if we want to use tree selection.
+     *
+     * @return bool
+     */
+    protected function isTreePicker()
+    {
+        return $this->widgetMode == 2;
+    }
+
+    /**
+     * Determine the correct sorting column to use.
+     *
+     * @return string
+     */
+    protected function getTagSource()
+    {
+        return $this->get('tag_table');
+    }
+
+    /**
+     * Determine the correct sorting column to use.
+     *
+     * @return string
+     */
+    protected function getIdColumn()
+    {
+        return $this->get('tag_id') ?: 'id';
+    }
+
+    /**
+     * Determine the correct sort direction to use.
+     *
+     * @return string
+     */
+    protected function getSortDirection()
+    {
+        return $this->get('tag_sort');
+    }
+
+    /**
+     * Determine the correct sorting column to use.
+     *
+     * @return string
+     */
+    protected function getSortingColumn()
+    {
+        return $this->get('tag_sorting') ?: $this->getIdColumn();
+    }
+
+    /**
+     * Determine the correct sorting column to use.
+     *
+     * @return string
+     */
+    protected function getValueColumn()
+    {
+        return $this->get('tag_column');
+    }
+
+    /**
+     * Determine the correct alias column to use.
+     *
+     * @return string
+     */
+    protected function getAliasColumn()
+    {
+        $strColNameAlias = $this->get('tag_alias');
+        if ($this->isTreePicker() || !$strColNameAlias) {
+            $strColNameAlias = $this->getIdColumn();
+        }
+        return $strColNameAlias;
+    }
+
+    /**
+     * Determine the correct alias column to use.
+     *
+     * @return string
+     *
+     * @deprecated Use the getAliasColumn function instead.
+     */
+    protected function getAliasCol()
+    {
+        return $this->getAliasColumn();
+    }
+
+    /**
+     * Determine the correct where column to use.
+     *
+     * @return string
+     */
+    protected function getWhereColumn()
+    {
+        return $this->get('tag_where') ? html_entity_decode($this->get('tag_where')) : null;
+    }
+
+    /**
+     * Return the name of the table with the references. (m:n).
+     *
+     * @return string
+     *
+     * @deprecated This was non functional anyway as we had many hardcoded references to 'tl_metamodel_tag_relation'.
+     */
+    protected function getReferenceTable()
+    {
+        return 'tl_metamodel_tag_relation';
+    }
+
+    /**
+     * Ensure the attribute has been configured correctly.
+     *
+     * @return bool
+     */
+    protected function isProperlyConfigured()
+    {
+        if (isset($this->isProperlyConfigured)) {
+            return $this->isProperlyConfigured;
+        }
+
+        return $this->isProperlyConfigured = $this->checkConfiguration();
+    }
+
+    /**
+     * Check the configuration of the attribute.
+     *
+     * @return bool
+     */
+    protected function checkConfiguration()
+    {
+        return $this->getTagSource()
+            && $this->getValueColumn()
+            && $this->getAliasColumn()
+            && $this->getIdColumn()
+            && $this->getSortingColumn();
+    }
+
+    /**
+     * Test that we can create the filter options.
+     *
+     * @param string[]|null $idList The ids of items that the values shall be fetched from
+     *                              (If empty or null, all items).
+     *
+     * @return bool
+     */
+    protected function isFilterOptionRetrievingPossible($idList)
+    {
+        return $this->isProperlyConfigured() && (($idList === null) || !empty($idList));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function prepareTemplate(Template $objTemplate, $arrRowData, $objSettings)
+    {
+        parent::prepareTemplate($objTemplate, $arrRowData, $objSettings);
+        $objTemplate->alias = $this->getAliasColumn();
+        $objTemplate->value = $this->getValueColumn();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAttributeSettingNames()
+    {
+        return array_merge(
+            parent::getAttributeSettingNames(),
+            array(
+                'tag_table',
+                'tag_column',
+                'tag_id',
+                'tag_alias',
+                'tag_where',
+                'tag_filter',
+                'tag_filterparams',
+                'tag_sort',
+                'tag_sorting',
+                'tag_as_wizard',
+                'tag_minLevel',
+                'tag_maxLevel',
+                'mandatory',
+                'submitOnChange',
+                'filterable',
+                'searchable',
+            )
+        );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getFieldDefinition($arrOverrides = array())
+    {
+        $arrFieldDef      = parent::getFieldDefinition($arrOverrides);
+        $this->widgetMode = $arrOverrides['tag_as_wizard'];
+        if ($this->isTreePicker()) {
+            $arrFieldDef['inputType']          = 'DcGeneralTreePicker';
+            $arrFieldDef['eval']['sourceName'] = $this->getTagSource();
+            $arrFieldDef['eval']['fieldType']  = 'checkbox';
+            $arrFieldDef['eval']['idProperty'] = $this->getAliasColumn();
+            $arrFieldDef['eval']['orderField'] = $this->getSortingColumn();
+            $arrFieldDef['eval']['minLevel']   = $arrOverrides['tag_minLevel'];
+            $arrFieldDef['eval']['maxLevel']   = $arrOverrides['tag_maxLevel'];
+        } elseif ($this->widgetMode == 1) {
+            // If tag as wizard is true, change the input type.
+            $arrFieldDef['inputType'] = 'checkboxWizard';
+        } elseif ($this->widgetMode == 3) {
+            $arrFieldDef['inputType']      = 'select';
+            $arrFieldDef['eval']['chosen'] = true;
+        } else {
+            $arrFieldDef['inputType'] = 'checkbox';
+        }
+
+        $arrFieldDef['eval']['includeBlankOption'] = true;
+        $arrFieldDef['eval']['multiple']           = true;
+
+        return $arrFieldDef;
+    }
+
+    /**
+     * Translate the values from the widget.
+     *
+     * @param array $varValue The values.
+     *
+     * @return array
+     */
+    abstract protected function getValuesFromWidget($varValue);
+
+    /**
+     * {@inheritdoc}
+     */
+    public function widgetToValue($varValue, $itemId)
+    {
+        // If we are in tree mode, we got a comma separate list.
+        if ($this->isTreePicker() && !empty($varValue) && !is_array($varValue)) {
+            $varValue = explode(',', $varValue);
+        }
+
+        if ((!is_array($varValue)) || empty($varValue)) {
+            return array();
+        }
+
+        return $this->getValuesFromWidget($varValue);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function searchFor($strPattern)
+    {
+        $objFilterRule = new FilterRuleTags($this, $strPattern);
+        return $objFilterRule->getMatchingIds();
+    }
+
+    /**
+     * Loop over the Result until the item id is not matching anymore the requested item id.
+     *
+     * @param string $itemId  The item id for which the ids shall be retrieved.
+     *
+     * @param Result $allTags The database result from which the ids shall be extracted.
+     *
+     * @return array
+     */
+    protected function getExistingTags($itemId, $allTags)
+    {
+        $thisExisting = array();
+
+        // Determine existing tags for this item.
+        /** @noinspection PhpUndefinedFieldInspection */
+        if (($allTags->item_id == $itemId)) {
+            /** @noinspection PhpUndefinedFieldInspection */
+            $thisExisting[] = $allTags->value_id;
+        }
+
+        /** @noinspection PhpUndefinedFieldInspection */
+        while ($allTags->next() && ($allTags->item_id == $itemId)) {
+            /** @noinspection PhpUndefinedFieldInspection */
+            $thisExisting[] = $allTags->value_id;
+        }
+
+        return $thisExisting;
+    }
+
+    /**
+     * Update the tag ids for a given item.
+     *
+     * @param int    $itemId         The item for which data shall be set for.
+     *
+     * @param array  $tags           The tag ids that shall be set for the item.
+     *
+     * @param Result $existingTagIds The sql result containing the tag ids present in the database.
+     *
+     * @return array
+     */
+    private function setDataForItem($itemId, $tags, $existingTagIds)
+    {
+        $database = $this->getDatabase();
+
+        if ($tags === null) {
+            $tagIds = array();
+        } else {
+            $tagIds = array_keys($tags);
+        }
+        $thisExisting = $this->getExistingTags($itemId, $existingTagIds);
+
+        // First pass, delete all not mentioned anymore.
+        $valuesToRemove = array_diff($thisExisting, $tagIds);
+        if ($valuesToRemove) {
+            $this->connection
+                ->createQueryBuilder()
+                ->delete('tl_metamodel_tag_relation', 'r')
+                ->where('att_id=:attId')
+                ->andWhere('item_id=:itemId')
+                ->andWhere('value_id IN (:valueIds)')
+                ->setParameter('attId', $this->get('id'))
+                ->setParameter('itemId', $itemId)
+                ->setParameter('valueIds', $valuesToRemove, Connection::PARAM_STR_ARRAY)
+                ->execute();
+        }
+
+        // Second pass, add all new values in a row.
+        $valuesToAdd  = array_diff($tagIds, $thisExisting);
+        $insertValues = array();
+        if ($valuesToAdd) {
+            foreach ($valuesToAdd as $valueId) {
+                $insertValues[] = sprintf(
+                    '(%s,%s,%s,%s)',
+                    $this->get('id'),
+                    $itemId,
+                    (int) $tags[$valueId]['tag_value_sorting'],
+                    $valueId
+                );
+            }
+        }
+
+        // Third pass, update all sorting values.
+        $valuesToUpdate = array_diff($tagIds, $valuesToAdd);
+        if ($valuesToUpdate) {
+            foreach ($valuesToUpdate as $valueId) {
+                if (!array_key_exists('tag_value_sorting', $tags[$valueId])) {
+                    continue;
+                }
+
+                $database
+                    ->prepare(
+                        'UPDATE tl_metamodel_tag_relation
+                        SET value_sorting = ' . (int) $tags[$valueId]['tag_value_sorting'] . '
+                        WHERE att_id=?
+                        AND item_id=?
+                        AND value_id=?'
+                    )
+                    ->execute($this->get('id'), $itemId, $valueId);
+            }
+        }
+
+        return $insertValues;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setDataFor($arrValues)
+    {
+        if (!$this->isProperlyConfigured()) {
+            return;
+        }
+
+        $database = $this->getDatabase();
+        $itemIds  = array_keys($arrValues);
+        sort($itemIds);
+
+        // Load all existing tags for all items to be updated, keep the ordering to item Id
+        // so we can benefit from the batch deletion and insert algorithm.
+        $existingTagIds = $database
+            ->prepare(
+                sprintf(
+                    'SELECT * FROM %1$s
+                    WHERE att_id=?
+                    AND item_id IN (%2$s)
+                    ORDER BY item_id ASC',
+                    'tl_metamodel_tag_relation',
+                    implode(',', array_fill(0, count($itemIds), '?'))
+                )
+            )
+            ->execute(array_merge(array($this->get('id')), $itemIds));
+
+        // Now loop over all items and update the values for them.
+        // NOTE: we can not loop over the original array, as the item ids are not neccessarily
+        // sorted ascending by item id.
+        $insertValues = array();
+        foreach ($itemIds as $itemId) {
+            $insertValues = array_merge(
+                $insertValues,
+                $this->setDataForItem($itemId, $arrValues[$itemId], $existingTagIds)
+            );
+        }
+
+        if ($insertValues) {
+            $database->execute(
+                'INSERT INTO tl_metamodel_tag_relation
+                (att_id, item_id, value_sorting, value_id)
+                VALUES ' . implode(',', $insertValues)
+            );
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws \RuntimeException When an invalid id array has been passed.
+     */
+    public function unsetDataFor($arrIds)
+    {
+        if (!is_array($arrIds)) {
+            throw new \RuntimeException(
+                __METHOD__ . '() invalid parameter given! Array of ids is needed.',
+                1
+            );
+        }
+        if (empty($arrIds)) {
+            return;
+        }
+
+        $this->connection
+            ->createQueryBuilder()
+            ->delete('tl_metamodel_tag_relation')
+            ->where('att_id=:attId')
+            ->andWhere('item_id IN (:itemIds)')
+            ->setParameter('attId', $this->get('id'))
+            ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
+            ->execute();
+    }
+}

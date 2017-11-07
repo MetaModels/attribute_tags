@@ -17,7 +17,7 @@ services:
               method: manipulateTreePrickerForSortOrder
             }
 
-    metamodels.attribute_select.listeners.backend_listener:
+    metamodels.attribute_tags.listeners.backend_listener:
         class: MetaModels\AttributeTagsBundle\EventListener\BackendListener
         arguments:
           - '@cca.dc-general.scope-matcher'

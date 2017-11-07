@@ -3,8 +3,8 @@ services:
         class: MetaModels\AttributeTagsBundle\EventListener\GetPropertyOptionsListener
         tags:
           - {
-              name: kernel.event_listener
-              event: 'dc-general.view.contao2backend.get-property-options'
+              name: kernel.event_listener,
+              event: 'dc-general.view.contao2backend.get-property-options',
               method: getPropertyOptions
             }
 
@@ -12,8 +12,8 @@ services:
         class: MetaModels\AttributeTagsBundle\EventListener\TreePickerManipulatingListener
         tags:
           - {
-              name: kernel.event_listener
-              event: 'dc-general.view.contao2backend.manipulate-widget'
+              name: kernel.event_listener,
+              event: 'dc-general.view.contao2backend.manipulate-widget',
               method: manipulateTreePrickerForSortOrder
             }
 

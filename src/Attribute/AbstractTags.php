@@ -427,7 +427,7 @@ abstract class AbstractTags extends BaseComplex
         if ($valuesToRemove) {
             $this->connection
                 ->createQueryBuilder()
-                ->delete('tl_metamodel_tag_relation', 'r')
+                ->delete('tl_metamodel_tag_relation')
                 ->where('att_id=:attId')
                 ->andWhere('item_id=:itemId')
                 ->andWhere('value_id IN (:valueIds)')

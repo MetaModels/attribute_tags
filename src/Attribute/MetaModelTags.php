@@ -32,6 +32,7 @@ namespace MetaModels\AttributeTagsBundle\Attribute;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\ITranslated;
 use MetaModels\Filter\IFilter;
+use MetaModels\Filter\Rules\SimpleQuery;
 use MetaModels\Filter\Rules\StaticIdList;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
 use MetaModels\IFactory;
@@ -115,8 +116,7 @@ class MetaModelTags extends AbstractTags
     protected function getTagMetaModel()
     {
         if (empty($this->objSelectMetaModel)) {
-            $this->objSelectMetaModel =
-                $this->getMetaModel()->getServiceContainer()->getFactory()->getMetaModel($this->getTagSource());
+            $this->objSelectMetaModel =$this->factory->getMetaModel($this->getTagSource());
         }
 
         return $this->objSelectMetaModel;
@@ -289,23 +289,21 @@ class MetaModelTags extends AbstractTags
             if ($alias === 'id') {
                 $valueIds = $varValue;
             } else {
-                $result = $this->getDatabase()
-                    ->prepare(
-                        sprintf(
-                            'SELECT v.id FROM %1$s AS v WHERE v.%2$s IN (%3$s) LIMIT 1',
-                            $model->getTableName(),
-                            $alias,
-                            $this->parameterMask($varValue)
-                        )
-                    )
-                    ->execute($varValue);
+                // Translate the alias values to the item ids.
+                $result = $this
+                    ->getConnection()
+                    ->createQueryBuilder()
+                    ->select('id')
+                    ->from($model->getTableName())
+                    ->where($alias . 'IN (:values)')
+                    ->setParameter('values', $varValue, Connection::PARAM_STR_ARRAY)
+                    ->execute();
 
-                /** @noinspection PhpUndefinedFieldInspection */
-                if (!$result->numRows) {
+                $valueIds = $result->fetchAll(\PDO::FETCH_COLUMN);
+
+                if (empty($valueIds)) {
                     throw new \RuntimeException('Could not translate value ' . var_export($varValue, true));
                 }
-
-                $valueIds = $result->fetchEach('id');
             }
         }
 
@@ -330,6 +328,7 @@ class MetaModelTags extends AbstractTags
             ->addSelect('COUNT(item_id) AS amount')
             ->from('tl_metamodel_tag_relation')
             ->where('att_id=:attId')
+            ->setParameter('attId', $this->get('id'))
             ->groupBy('value_id');
 
         if (0 < $items->getCount()) {
@@ -453,43 +452,22 @@ class MetaModelTags extends AbstractTags
      */
     public function buildFilterRulesForUsedOnly($filter, $idList = array())
     {
-        $params = array($this->get('id'));
+        $result = $this
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('value_id AS id')
+            ->from('tl_metamodel_tag_relation')
+            ->where('att_id=:attId')
+            ->groupBy('value_id')
+            ->setParameter('attId', $this->get('id'));
 
-        if (empty($idList)) {
-            $arrUsedValues = $this
-                ->getDatabase()
-                ->prepare(
-                    'SELECT value_id AS value
-                     FROM tl_metamodel_tag_relation
-                     WHERE att_id = ?
-                     GROUP BY value'
-                )
-                ->execute($params)
-                ->fetchEach('value');
-        } else {
-            $query = sprintf(
-                'SELECT value_id AS value
-                    FROM tl_metamodel_tag_relation
-                    WHERE att_id = ?
-                      AND item_id IN (%s)
-                    GROUP BY value',
-                $this->parameterMask($idList)
-            );
-
-            $arrUsedValues = $this->getDatabase()
-                ->prepare($query)
-                ->execute(array_merge($params, $idList))
-                ->fetchEach('value');
+        if (!empty($idList)) {
+            $result
+                ->andWhere('item_id IN (:itemIds)')
+                ->setParameter('itemIds', $idList, Connection::PARAM_STR_ARRAY);
         }
 
-        $arrUsedValues = array_filter(
-            $arrUsedValues,
-            function ($value) {
-                return !empty($value);
-            }
-        );
-
-        $filter->addFilterRule(new StaticIdList($arrUsedValues));
+        $filter->addFilterRule(SimpleQuery::createFromQueryBuilder($result));
     }
 
     /**
@@ -537,32 +515,27 @@ class MetaModelTags extends AbstractTags
     public function getDataFor($arrIds)
     {
         if (!$this->isProperlyConfigured()) {
-            return array();
+            return [];
         }
 
         $rows = $this
-            ->getDatabase()
-            ->prepare(
-                sprintf(
-                    'SELECT item_id AS id, value_id AS value
-                    FROM tl_metamodel_tag_relation
-                    WHERE tl_metamodel_tag_relation.item_id IN (%1$s)
-                    AND att_id = ?
-                    ORDER BY tl_metamodel_tag_relation.value_sorting',
-                    $this->parameterMask($arrIds)
-                )
-            )
-            ->execute(array_merge($arrIds, array($this->get('id'))));
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('item_id AS id')
+            ->addSelect('value_id AS value')
+            ->from('tl_metamodel_tag_relation')
+            ->where('item_id IN (:itemIds)')
+            ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
+            ->andWhere('att_id=:attId')
+            ->setParameter('attId', $this->get('id'))
+            ->orderBy('value_sorting')
+            ->execute()
+            ->fetchAll(\PDO::FETCH_ASSOC);
 
-        $valueIds     = array();
-        $referenceIds = array();
-
-        while ($rows->next()) {
-            /** @noinspection PhpUndefinedFieldInspection */
-            $value = $rows->value;
-            /** @noinspection PhpUndefinedFieldInspection */
-            $valueIds[$rows->id][] = $value;
-            $referenceIds[]        = $value;
+        $valueIds     = [];
+        $referenceIds = [];
+        foreach ($rows as $row) {
+            $valueIds[$row['id']][] = $row['value'];
         }
 
         $values = $this->getValuesById($referenceIds);

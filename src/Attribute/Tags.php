@@ -27,7 +27,7 @@
 
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
-use Contao\Database\Result;
+use Doctrine\DBAL\Connection;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -40,7 +40,7 @@ class Tags extends AbstractTags
     protected function checkConfiguration()
     {
         return parent::checkConfiguration()
-            && $this->getDatabase()->tableExists($this->getTagSource());
+            && $this->getConnection()->getSchemaManager()->tablesExist([$this->getTagSource()]);
     }
 
     /**
@@ -73,141 +73,26 @@ class Tags extends AbstractTags
      */
     protected function getValuesFromWidget($varValue)
     {
-        $arrParams = array();
-        foreach ($varValue as $strValue) {
-            $arrParams[] = $strValue;
-        }
-
-        $objValue = $this
-            ->getDatabase()
-            ->prepare(
-                sprintf(
-                    'SELECT %1$s.*
-                    FROM %1$s
-                    WHERE %2$s IN (%3$s)
-                    ORDER BY %4$s',
-                    $this->getTagSource(),
-                    $this->getAliasColumn(),
-                    implode(',', array_fill(0, count($arrParams), '?')),
-                    $this->getSortingColumn()
-                )
-            )
-            ->execute($arrParams);
-
-        $strColNameId = $this->get('tag_id');
-        $arrResult    = array();
-
-        while ($objValue->next()) {
-            // Adding the sorting from widget.
-            $strAlias                                                 = $this->getAliasColumn();
-            $arrResult[$objValue->$strColNameId]                      = $objValue->row();
-            $arrResult[$objValue->$strColNameId]['tag_value_sorting'] = array_search($objValue->$strAlias, $varValue);
-        }
-
-        return $arrResult;
-    }
-
-    /**
-     * Retrieve the filter options for items with the given ids.
-     *
-     * @param array $arrIds   The ids for which the options shall be retrieved.
-     *
-     * @param bool  $usedOnly Flag if only used options shall be retrieved.
-     *
-     * @return Result
-     */
-    protected function retrieveFilterOptionsForIds($arrIds, $usedOnly)
-    {
-        if ($usedOnly) {
-            $sqlQuery = '
-                    SELECT COUNT(%1$s.%2$s) as mm_count, %1$s.*
-                    FROM %1$s
-                    LEFT JOIN tl_metamodel_tag_relation ON (
-                        (tl_metamodel_tag_relation.att_id=?)
-                        AND (tl_metamodel_tag_relation.value_id=%1$s.%2$s)
-                    )
-                    WHERE (tl_metamodel_tag_relation.item_id IN (%3$s)%5$s)
-                    GROUP BY %1$s.%2$s
-                    ORDER BY %1$s.%4$s
-                ';
-        } else {
-            $sqlQuery = '
-                    SELECT COUNT(rel.value_id) as mm_count, %1$s.*
-                    FROM %1$s
-                    LEFT JOIN tl_metamodel_tag_relation as rel ON (
-                        (rel.att_id=?) AND (rel.value_id=%1$s.%2$s)
-                    )
-                    WHERE %1$s.%2$s IN (%3$s)%5$s
-                    GROUP BY %1$s.%2$s
-                    ORDER BY %1$s.%4$s';
-        }
-
-        return $this
-            ->getDatabase()
-            ->prepare(
-                sprintf(
-                    $sqlQuery,
-                    // @codingStandardsIgnoreStart - We want to keep the numbers as comment at the end of the following lines.
-                    $this->getTagSource(),                                                    // 1
-                    $this->getIdColumn(),                                                     // 2
-                    implode(',', $arrIds),                                                    // 3
-                    $this->getSortingColumn(),                                                // 4
-                    ($this->getWhereColumn() ? ' AND (' . $this->getWhereColumn() . ')' : '') // 5
-                // @codingStandardsIgnoreEnd
-                )
-            )
-            ->execute($this->get('id'));
-    }
-
-    /**
-     * Retrieve the filter options for items with the given ids.
-     *
-     * @param bool $usedOnly Flag if only used options shall be retrieved.
-     *
-     * @return Result
-     */
-    protected function retrieveFilterOptionsWithoutIds($usedOnly)
-    {
-        if ($usedOnly) {
-            $sqlQuery = '
-                    SELECT COUNT(%1$s.%3$s) as mm_count, %1$s.*
-                    FROM %1$s
-                    INNER JOIN tl_metamodel_tag_relation as rel
-                    ON (
-                        (rel.att_id="%4$s") AND (rel.value_id=%1$s.%3$s)
-                    )
-                    WHERE rel.att_id=%4$s'
-                . ($this->getWhereColumn() ? ' AND %5$s' : '') . '
-                    GROUP BY %1$s.%3$s
-                    ORDER BY %1$s.%2$s';
-        } else {
-            $sqlQuery = '
-                    SELECT COUNT(rel.value_id) as mm_count, %1$s.*
-                    FROM %1$s
-                    LEFT JOIN tl_metamodel_tag_relation as rel
-                    ON (
-                        (rel.att_id="%4$s") AND (rel.value_id=%1$s.%3$s)
-                    )'
-                . ($this->getWhereColumn() ? ' WHERE %5$s' : '') . '
-                    GROUP BY %1$s.%3$s
-                    ORDER BY %1$s.%2$s';
-        }
-
-        return $this
-            ->getDatabase()
-            ->prepare(
-                sprintf(
-                    $sqlQuery,
-                    // @codingStandardsIgnoreStart - We want to keep the numbers as comment at the end of the following lines.
-                    $this->getTagSource(),       // 1
-                    $this->getSortingColumn(),   // 2
-                    $this->getIdColumn(),        // 3
-                    $this->get('id'),            // 4
-                    $this->getWhereColumn()      // 5
-                // @codingStandardsIgnoreEnd
-                )
-            )
+        $alias  = $this->getAliasColumn();
+        $idname = $this->get('tag_id');
+        $values = $this
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('v.*')
+            ->from($this->getTagSource(), 'v')
+            ->where('v.' . $alias . ' IN (:aliases)')
+            ->setParameter('aliases', $varValue, Connection::PARAM_STR_ARRAY)
+            ->orderBy('v' . $this->getSortingColumn())
             ->execute();
+
+        $result = [];
+        foreach ($values->fetchAll(\PDO::FETCH_ASSOC) as $value) {
+            // Adding the sorting from widget.
+            $result[$value[$idname]]                      = $value;
+            $result[$value[$idname]]['tag_value_sorting'] = array_search($value[$alias], $varValue);
+        }
+
+        return $result;
     }
 
     /**
@@ -221,22 +106,49 @@ class Tags extends AbstractTags
             return array();
         }
 
-        if ($idList) {
-            $objValue = $this->retrieveFilterOptionsForIds($idList, $usedOnly);
+        $idColumn = $this->getIdColumn();
+        $builder  = $this->getConnection()->createQueryBuilder();
+        $builder
+            ->setParameter('attId', $this->get('id'))
+            ->from($this->getTagSource(), 'v')
+            ->leftJoin(
+                'v',
+                'tl_metamodel_tag_relation',
+                'r',
+                '(r.att_id=:attId) AND (r.value_id=v.' . $idColumn . ')'
+            )
+            ->groupBy('v.' . $idColumn)
+            ->orderBy('v.' . $this->getSortingColumn());
+
+        if ($usedOnly) {
+            $builder->select('COUNT(v.' . $idColumn . ') AS mm_count');
+            if (!empty($idList)) {
+                $builder
+                    ->where('r.item_id IN (:valueIds)')
+                    ->setParameter('valueIds', $idList, Connection::PARAM_STR_ARRAY);
+            }
         } else {
-            $objValue = $this->retrieveFilterOptionsWithoutIds($usedOnly);
+            $builder->select('COUNT(r.value_id) AS mm_count');
+            if (!empty($idList)) {
+                $builder
+                    ->where('v.' . $idColumn . ' IN (:valueIds)')
+                    ->setParameter('valueIds', $idList, Connection::PARAM_STR_ARRAY);
+            }
+        }
+        $builder->addSelect('v.*');
+
+        if ($additionalWhere = $this->getWhereColumn()) {
+            $builder->andWhere($additionalWhere);
         }
 
-        $result      = array();
-        $valueColumn = $this->getValueColumn();
         $aliasColumn = $this->getAliasColumn();
-        while ($objValue->next()) {
+        $valueColumn = $this->getValueColumn();
+        $result      = [];
+        foreach ($builder->execute()->fetchAll(\PDO::FETCH_ASSOC) as $value) {
             if ($arrCount !== null) {
-                /** @noinspection PhpUndefinedFieldInspection */
-                $arrCount[$objValue->$aliasColumn] = $objValue->mm_count;
+                $arrCount[$value[$aliasColumn]] = $value['mm_count'];
             }
-
-            $result[$objValue->$aliasColumn] = $objValue->$valueColumn;
+            $result[$value[$aliasColumn]] = $value[$valueColumn];
         }
 
         return $result;
@@ -248,45 +160,35 @@ class Tags extends AbstractTags
     public function getDataFor($arrIds)
     {
         if (!$this->isProperlyConfigured()) {
-            return array();
+            return [];
         }
 
         $strTableName = $this->getTagSource();
         $strColNameId = $this->getIdColumn();
-        $objDB        = $this->getDatabase();
-        $arrReturn    = array();
         $itemIdColumn = $this->getMetaModel()->getTableName() . '_id';
 
-        $objValue = $objDB
-            ->prepare(
-                sprintf(
-                    'SELECT %1$s.*, tl_metamodel_tag_relation.item_id AS %2$s
-                    FROM %1$s
-                    LEFT JOIN tl_metamodel_tag_relation ON (
-                        (tl_metamodel_tag_relation.att_id=?)
-                        AND (tl_metamodel_tag_relation.value_id=%1$s.%3$s)
-                    )
-                    WHERE tl_metamodel_tag_relation.item_id IN (%4$s)
-                    ORDER BY tl_metamodel_tag_relation.value_sorting',
-                    // @codingStandardsIgnoreStart - We want to keep the numbers as comment at the end of the following lines.
-                    $strTableName,            // 1
-                    $itemIdColumn,            // 2
-                    $strColNameId,            // 3
-                    implode(',', $arrIds)     // 4
-                // @codingStandardsIgnoreEnd
-                )
-            )
-            ->execute($this->get('id'));
+        $builder = $this->getConnection()->createQueryBuilder()
+            ->select('v.*')
+            ->addSelect('r.item_id AS ' . $itemIdColumn)
+            ->from($strTableName, 'v')
+            ->leftJoin('v', 'tl_metamodel_tag_relation', 'r',
+                '(r.att_id=:attId) AND (r.value_id=v.' . $strColNameId . ')')
+            ->setParameter('attId', $this->get('id'))
+            ->where('r.item_id IN (:itemIds)')
+            ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
+            ->orderBy('r.value_sorting')
+            ->execute();
 
-        while ($objValue->next()) {
-            if (!isset($arrReturn[$objValue->$itemIdColumn])) {
-                $arrReturn[$objValue->$itemIdColumn] = array();
+        $result  = [];
+        foreach ($builder->fetchAll(\PDO::FETCH_ASSOC) as $value) {
+            if (!isset($result[$value[$itemIdColumn]])) {
+                $result[$value[$itemIdColumn]] = [];
             }
-            $arrData = $objValue->row();
-            unset($arrData[$itemIdColumn]);
-            $arrReturn[$objValue->$itemIdColumn][$objValue->$strColNameId] = $arrData;
+            $idValue = $value;
+            unset($value[$itemIdColumn]);
+            $result[$idValue][$value[$strColNameId]] = $value;
         }
 
-        return $arrReturn;
+        return $result;
     }
 }

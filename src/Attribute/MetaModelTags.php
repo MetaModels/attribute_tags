@@ -175,8 +175,8 @@ class MetaModelTags extends AbstractTags
         }
         $alias = $this->getAliasColumn();
         foreach ($valueIds as $valueId) {
-            $values[$valueId][self::TAGS_RAW]['id']   = $valueId;
             $values[$valueId][self::TAGS_RAW][$alias] = null;
+            $values[$valueId][self::TAGS_RAW]['id']   = $valueId;
         }
 
         return $values;

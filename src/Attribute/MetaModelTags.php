@@ -535,7 +535,7 @@ class MetaModelTags extends AbstractTags
         $valueIds     = [];
         $referenceIds = [];
         foreach ($rows as $row) {
-            $valueIds[$row['id']][] = $row['value'];
+            $referenceIds[] = $valueIds[$row['id']][] = $row['value'];
         }
 
         $values = $this->getValuesById($referenceIds);

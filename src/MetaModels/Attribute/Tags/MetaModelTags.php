@@ -87,6 +87,7 @@ class MetaModelTags extends AbstractTags
      */
     protected function getValuesById($valueIds)
     {
+        //var_dump($valueIds);
         $recursionKey = $this->getMetaModel()->getTableName();
         $metaModel    = $this->getTagMetaModel();
         $filter       = $metaModel->getEmptyFilter();
@@ -102,20 +103,27 @@ class MetaModelTags extends AbstractTags
         $items = $metaModel->findByFilter($filter, $this->getSortingColumn(), 0, 0, $this->getSortDirection());
         unset($tables[$recursionKey]);
 
-        // Sort items manuel for checkbox wizard.
+        // Sort items manually for checkbox wizard.
         if ($this->isCheckboxWizard()) {
-            $orderIds = array_flip($valueIds);
+            // Remove deleted referenced items and flip.
+            $orderIds = array_flip(array_filter($valueIds));
 
             foreach ($items as $item) {
                 $orderIds[$item->get('id')] = $item;
             }
-
-            $orderItems = new Items(array_reverse(array_reverse($orderIds)));
-
-            $items = $orderItems;
+            $items = new Items(
+                array_values(
+                    array_filter(
+                        $orderIds,
+                        function ($itemOrId) {
+                            return $itemOrId instanceof IItem;
+                        }
+                    )
+                )
+            );
         }
 
-        $values = array();
+        $values = [];
         $count  = 0;
         foreach ($items as $item) {
             $valueId    = $item->get('id');
@@ -145,7 +153,7 @@ class MetaModelTags extends AbstractTags
         // Now sort the values according to our sorting column.
         $filter = $this->getTagMetaModel()->getEmptyFilter();
         // Add some more filter rules.
-        $filter->addFilterRule(new StaticIdList(array_keys($idList)));
+        $filter->addFilterRule(new StaticIdList($idList));
 
         $items = $this->getTagMetaModel()->findByFilter(
             $filter,
@@ -155,24 +163,36 @@ class MetaModelTags extends AbstractTags
             $this->getSortDirection()
         );
 
-        // Sort items manuel for checkbox wizard.
+        // Sort items manually for checkbox wizard.
         if ($this->isCheckboxWizard()) {
-            $orderIds = array_flip(array_keys($idList));
+            // Remove deleted referenced items and flip.
+            $orderIds = array_flip(array_filter($idList));
 
             foreach ($items as $item) {
                 $orderIds[$item->get('id')] = $item;
             }
-
-            $orderItems = new Items(array_reverse(array_reverse($orderIds)));
-
-            return array_keys(
-                $this->convertItemsToFilterOptions($orderItems, $this->getValueColumn(), $this->getAliasColumn())
+            $items = new Items(
+                array_values(
+                    array_filter(
+                        $orderIds,
+                        function ($itemOrId) {
+                            return $itemOrId instanceof IItem;
+                        }
+                    )
+                )
             );
         }
 
-        return array_keys(
-            $this->convertItemsToFilterOptions($items, $this->getValueColumn(), $this->getAliasColumn())
-        );
+        $result = [];
+        $aliasColumn = $this->getAliasColumn();
+        foreach ($items as $item) {
+            $parsedAlias = $item->parseAttribute($aliasColumn);
+            $result[$item->get('id')] = isset($parsedAlias['text']) ? $parsedAlias['text'] : $item->get($aliasColumn);
+        }
+        // Keep non existing ids
+        $result = array_merge($result, array_diff($idList, array_keys($result)));
+
+        return $result;
     }
 
     /**
@@ -185,24 +205,13 @@ class MetaModelTags extends AbstractTags
             return array();
         }
 
-        $aliasColumn = $this->getAliasColumn();
-        $arrResult   = array();
-
-        if ($varValue) {
-            foreach ($varValue as $arrValue) {
-                $aliasValue = isset($arrValue[$aliasColumn]) && !empty($arrValue[$aliasColumn])
-                    ? $arrValue[$aliasColumn]
-                    : $arrValue[self::TAGS_RAW][$aliasColumn];
-
-                if (!empty($aliasValue)) {
-                    $arrResult[$arrValue[self::TAGS_RAW]['id']] = $aliasValue;
-                }
-            }
+        $ids = array();
+        foreach ($varValue as $arrValue) {
+            $ids[] = $arrValue[self::TAGS_RAW]['id'];
         }
 
         // Sorting of values must be done.
-        $arrResult = $this->sortIdsBySortingColumn($arrResult);
-
+        $arrResult = $this->sortIdsBySortingColumn($ids);
         if ($this->isTreePicker()) {
             return implode(',', $arrResult);
         }

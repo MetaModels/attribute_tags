@@ -147,12 +147,24 @@ class MetaModelTags extends AbstractTags
      */
     private function sortIdsBySortingColumn($idList)
     {
-        // Now sort the values according to our sorting column.
-        $filter = $this->getTagMetaModel()->getEmptyFilter();
-        // Add some more filter rules.
-        $filter->addFilterRule(new StaticIdList($idList));
+        // Only one item, what shall we sort here then?
+        if (1 === count($idList)) {
+            return array_keys($idList);
+        }
 
-        $items = $this->getTagMetaModel()->findByFilter(
+        $isList = array_keys($idList);
+        static $sorting;
+        if (isset($sorting[$cacheKey = implode(',', $isList)])) {
+            return $sorting[$cacheKey];
+        }
+
+        // Now sort the values according to our sorting column.
+        $filter = $this
+            ->getTagMetaModel()
+            ->getEmptyFilter()
+            ->addFilterRule(new StaticIdList(array_keys($idList)));
+
+        $itemIds = $this->getTagMetaModel()->getIdsFromFilter(
             $filter,
             $this->getSortingColumn(),
             0,
@@ -160,26 +172,17 @@ class MetaModelTags extends AbstractTags
             $this->getSortDirection()
         );
 
-        // Sort items manually for checkbox wizard.
-        if ($this->isCheckboxWizard()) {
-            $orderIds = array_flip($idList);
-
-            foreach ($items as $item) {
-                $orderIds[$item->get('id')] = $item;
-            }
-            $items = new Items(array_values($orderIds));
+        // Manual sorting of items for checkbox wizard.
+        if (!$this->isCheckboxWizard()) {
+            return $sorting[$cacheKey] = $itemIds;
         }
-
-        $result = [];
-        $aliasColumn = $this->getAliasColumn();
-        foreach ($items as $item) {
-            $parsedAlias = $item->parseAttribute($aliasColumn);
-            $result[$item->get('id')] = isset($parsedAlias['text']) ? $parsedAlias['text'] : $item->get($aliasColumn);
+        // Flip to have id as key and index on value.
+        $orderIds = array_flip(array_keys($idList));
+        // Loop over items and set $id => $id
+        foreach ($itemIds as $itemId) {
+            $orderIds[$itemId] = $itemId;
         }
-        // Keep non existing ids
-        $result = array_merge($result, array_diff($idList, array_keys($result)));
-
-        return $result;
+        return $sorting[$cacheKey] = array_values($orderIds);
     }
 
     /**
@@ -334,7 +337,8 @@ class MetaModelTags extends AbstractTags
             $this->getSortingColumn(),
             0,
             0,
-            $this->getSortDirection()
+            $this->getSortDirection(),
+            [$this->getAliasColumn(), $this->getValueColumn()]
         );
 
         if ($arrCount !== null) {

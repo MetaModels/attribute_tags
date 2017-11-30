@@ -87,6 +87,10 @@ class MetaModelTags extends AbstractTags
      */
     protected function getValuesById($valueIds)
     {
+        if (empty($valueIds)) {
+            return [];
+        }
+
         $recursionKey = $this->getMetaModel()->getTableName();
         $metaModel    = $this->getTagMetaModel();
         $filter       = $metaModel->getEmptyFilter();
@@ -129,19 +133,14 @@ class MetaModelTags extends AbstractTags
                 $parsedItem['text']
             );
         }
-        $alias = $this->getAliasColumn();
-        foreach ($valueIds as $valueId) {
-            $values[$valueId][self::TAGS_RAW]['id'] = $valueId;
-            $values[$valueId][self::TAGS_RAW][$alias] = null;
-        }
 
         return $values;
     }
 
     /**
-     * Sort an id list by the option column.
+     * Sort a list of value ids by the option column (non-existent ids will get moved to the end).
      *
-     * @param array $idList The id list to sort.
+     * @param array $idList The value id list to sort.
      *
      * @return array
      */
@@ -149,12 +148,11 @@ class MetaModelTags extends AbstractTags
     {
         // Only one item, what shall we sort here then?
         if (1 === count($idList)) {
-            return array_keys($idList);
+            return $idList;
         }
 
-        $isList = array_keys($idList);
         static $sorting;
-        if (isset($sorting[$cacheKey = implode(',', $isList)])) {
+        if (isset($sorting[$cacheKey = implode(',', $idList)])) {
             return $sorting[$cacheKey];
         }
 
@@ -162,7 +160,7 @@ class MetaModelTags extends AbstractTags
         $filter = $this
             ->getTagMetaModel()
             ->getEmptyFilter()
-            ->addFilterRule(new StaticIdList(array_keys($idList)));
+            ->addFilterRule(new StaticIdList($idList));
 
         $itemIds = $this->getTagMetaModel()->getIdsFromFilter(
             $filter,
@@ -174,15 +172,22 @@ class MetaModelTags extends AbstractTags
 
         // Manual sorting of items for checkbox wizard.
         if (!$this->isCheckboxWizard()) {
-            return $sorting[$cacheKey] = $itemIds;
+            // Keep order from input array, and add non existent ids to the end.
+            return $sorting[$cacheKey] = array_merge(
+                // Keep order from input array...
+                array_intersect($idList, $itemIds),
+                // ... and add non existent ids to the end.
+                array_diff($idList, $itemIds)
+            );
         }
         // Flip to have id as key and index on value.
-        $orderIds = array_flip(array_keys($idList));
+        $orderIds = array_flip($idList);
         // Loop over items and set $id => $id
         foreach ($itemIds as $itemId) {
             $orderIds[$itemId] = $itemId;
         }
-        return $sorting[$cacheKey] = array_values($orderIds);
+        // Use new order and add non existent ids to the end.
+        return $sorting[$cacheKey] = array_merge($itemIds, array_diff($idList, $itemIds));
     }
 
     /**
@@ -192,22 +197,39 @@ class MetaModelTags extends AbstractTags
     {
         // If we have a tree picker, the value must be a comma separated string.
         if (empty($varValue)) {
-            return array();
+            return [];
         }
 
-        $ids = array();
-        foreach ($varValue as $arrValue) {
-            $ids[] = $arrValue[self::TAGS_RAW]['id'];
-        }
+        $aliasColumn    = $this->getAliasColumn();
+        $aliasTranslate = function ($value) use ($aliasColumn) {
+            if (!empty($value[$aliasColumn])) {
+                return $value[$aliasColumn];
+            }
+            if (!empty($value[self::TAGS_RAW][$aliasColumn])) {
+                return $value[self::TAGS_RAW][$aliasColumn];
+            }
 
-        // Sorting of values must be done.
-        $arrResult = $this->sortIdsBySortingColumn($ids);
+            return null;
+        };
+
+        $alias = [];
+        foreach ($varValue as $valueId => $value) {
+            $alias[$valueId] = $aliasTranslate($value);
+        }
+        unset($valueId, $value);
+
+        // Sort the values now.
+        $sortedIds = $this->sortIdsBySortingColumn(array_keys($varValue));
+        $result    = [];
+        foreach ($sortedIds as $id) {
+            $result[] = $alias[$id];
+        }
         if ($this->isTreePicker()) {
-            return implode(',', $arrResult);
+            return implode(',', $result);
         }
 
         // We must use string keys.
-        return array_map('strval', $arrResult);
+        return array_map('strval', $result);
     }
 
     /**

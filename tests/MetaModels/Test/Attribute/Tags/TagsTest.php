@@ -24,11 +24,12 @@ namespace MetaModels\Test\Attribute\Tags;
 use MetaModels\Attribute\Tags\MetaModelTags;
 use MetaModels\Attribute\Tags\Tags;
 use MetaModels\IMetaModel;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests to test class Tags.
  */
-class TagsTest extends \PHPUnit_Framework_TestCase
+class TagsTest extends TestCase
 {
     /**
      * Mock a MetaModel.

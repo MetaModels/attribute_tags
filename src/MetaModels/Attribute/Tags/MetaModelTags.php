@@ -171,7 +171,7 @@ class MetaModelTags extends AbstractTags
         );
 
         // Manual sorting of items for checkbox wizard.
-        if (!$this->isCheckboxWizard()) {
+        if ($this->isCheckboxWizard()) {
             // Keep order from input array, and add non existent ids to the end.
             return $sorting[$cacheKey] = array_merge(
                 // Keep order from input array...

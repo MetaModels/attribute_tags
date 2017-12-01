@@ -315,13 +315,20 @@ class BackendListener
             $strSortColumn = $values->getPropertyValue('tag_sorting') ?: $strColNameId;
 
             $query = sprintf(
-                'SELECT %1$s.*
-                FROM %1$s%2$s
-                ORDER BY %1$s.%3$s',
+                'SELECT COUNT(rel.value_id) as mm_count, %1$s.*
+                FROM %1$s
+                LEFT JOIN tl_metamodel_tag_relation as rel
+                ON (
+                    (rel.att_id="0") AND (rel.value_id=%1$s.%3$s)
+                )
+                %2$s
+                GROUP BY %1$s.%3$s
+                ORDER BY %1$s.%4$s',
                 // @codingStandardsIgnoreStart - We want to keep the numbers as comment at the end of the following lines.
                 $strTableName,                            // 1
                 ($where ? ' WHERE ('.$where.')' : false), // 2
-                $strSortColumn                            // 3
+                $strColNameId,                            // 3
+                $strSortColumn                            // 4
             // @codingStandardsIgnoreEnd
             );
 

@@ -159,7 +159,7 @@ class MetaModelTags extends AbstractTags
         }
 
         static $sorting;
-        if (isset($sorting[$cacheKey = implode(',', $idList)])) {
+        if (isset($sorting[$cacheKey = $this->get('id') . implode(',', $idList)])) {
             return $sorting[$cacheKey];
         }
 

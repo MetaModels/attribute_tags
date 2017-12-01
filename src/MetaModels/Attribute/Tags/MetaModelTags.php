@@ -106,20 +106,27 @@ class MetaModelTags extends AbstractTags
         $items = $metaModel->findByFilter($filter, $this->getSortingColumn(), 0, 0, $this->getSortDirection());
         unset($tables[$recursionKey]);
 
-        // Sort items manuel for checkbox wizard.
+        // Sort items manually for checkbox wizard.
         if ($this->isCheckboxWizard()) {
-            $orderIds = array_flip($valueIds);
+            // Remove deleted referenced items and flip.
+            $orderIds = array_flip(array_filter($valueIds));
 
             foreach ($items as $item) {
                 $orderIds[$item->get('id')] = $item;
             }
-
-            $orderItems = new Items(array_reverse(array_reverse($orderIds)));
-
-            $items = $orderItems;
+            $items = new Items(
+                array_values(
+                    array_filter(
+                        $orderIds,
+                        function ($itemOrId) {
+                            return $itemOrId instanceof IItem;
+                        }
+                    )
+                )
+            );
         }
 
-        $values = array();
+        $values = [];
         $count  = 0;
         foreach ($items as $item) {
             $valueId    = $item->get('id');

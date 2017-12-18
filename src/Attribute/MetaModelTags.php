@@ -349,9 +349,11 @@ class MetaModelTags extends AbstractTags
      *
      * @param array  $amountArray The target array to where the counters shall be stored to.
      *
+     * @param array  $idList      The ids of items.
+     *
      * @return void
      */
-    protected function calculateFilterOptionsCount($items, &$amountArray)
+    protected function calculateFilterOptionsCount($items, &$amountArray, $idList)
     {
         $builder = $this
             ->getConnection()
@@ -371,6 +373,11 @@ class MetaModelTags extends AbstractTags
             $builder
                 ->andWhere('value_id IN (:valueIds)')
                 ->setParameter('valueIds', $ids, Connection::PARAM_STR_ARRAY);
+            if ($idList && is_array($idList)) {
+                $builder
+                    ->andWhere('item_id IN (:itemIds)')
+                    ->setParameter('itemIds', $idList, Connection::PARAM_STR_ARRAY);
+            }
         }
 
         $counts = $builder->execute();
@@ -411,7 +418,7 @@ class MetaModelTags extends AbstractTags
         );
 
         if ($arrCount !== null) {
-            $this->calculateFilterOptionsCount($objItems, $arrCount);
+            $this->calculateFilterOptionsCount($objItems, $arrCount, $idList);
         }
 
         return $this->convertItemsToFilterOptions(

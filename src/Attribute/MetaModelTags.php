@@ -275,9 +275,6 @@ class MetaModelTags extends AbstractTags
         foreach ($sortedIds as $id) {
             $result[] = $alias[$id];
         }
-        if ($this->isTreePicker()) {
-            return implode(',', $result);
-        }
 
         // We must use string keys.
         return array_map('strval', $result);

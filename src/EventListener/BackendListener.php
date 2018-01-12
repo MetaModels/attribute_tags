@@ -310,30 +310,14 @@ class BackendListener
         $values = $event->getPropertyValueBag();
 
         if ($where) {
-            $strTableName  = $values->getPropertyValue('tag_table');
-            $strColNameId  = $values->getPropertyValue('tag_id');
-            $strSortColumn = $values->getPropertyValue('tag_sorting') ?: $strColNameId;
-
-            $query = sprintf(
-                'SELECT COUNT(rel.value_id) as mm_count, %1$s.*
-                FROM %1$s
-                LEFT JOIN tl_metamodel_tag_relation as rel
-                ON (
-                    (rel.att_id="0") AND (rel.value_id=%1$s.%3$s)
-                )
-                %2$s
-                GROUP BY %1$s.%3$s
-                ORDER BY %1$s.%4$s',
-                // @codingStandardsIgnoreStart - We want to keep the numbers as comment at the end of the following lines.
-                $strTableName,                            // 1
-                ($where ? ' WHERE ('.$where.')' : false), // 2
-                $strColNameId,                            // 3
-                $strSortColumn                            // 4
-            // @codingStandardsIgnoreEnd
-            );
+            $query = $this->connection->createQueryBuilder()
+                ->select($values->getPropertyValue('tag_table') . '.*')
+                ->from($values->getPropertyValue('tag_table'))
+                ->where($where)
+                ->orderBy($values->getPropertyValue('tag_sorting') ?: $values->getPropertyValue('tag_id'));
 
             try {
-                $this->connection->exec($query);
+                $query->execute();
             } catch (\Exception $e) {
                 throw new \RuntimeException(
                     sprintf(

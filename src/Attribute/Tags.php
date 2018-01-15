@@ -82,7 +82,7 @@ class Tags extends AbstractTags
             ->from($this->getTagSource(), 'v')
             ->where('v.' . $alias . ' IN (:aliases)')
             ->setParameter('aliases', $varValue, Connection::PARAM_STR_ARRAY)
-            ->orderBy('v' . $this->getSortingColumn())
+            ->orderBy('v.' . $this->getSortingColumn())
             ->execute();
 
         $result = [];

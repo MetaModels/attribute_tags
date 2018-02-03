@@ -172,15 +172,19 @@ class Tags extends AbstractTags
             ->select('v.*')
             ->addSelect('r.item_id AS ' . $itemIdColumn)
             ->from($strTableName, 'v')
-            ->leftJoin('v', 'tl_metamodel_tag_relation', 'r',
-                '(r.att_id=:attId) AND (r.value_id=v.' . $strColNameId . ')')
+            ->leftJoin(
+                'v',
+                'tl_metamodel_tag_relation',
+                'r',
+                '(r.att_id=:attId) AND (r.value_id=v.' . $strColNameId . ')'
+            )
             ->setParameter('attId', $this->get('id'))
             ->where('r.item_id IN (:itemIds)')
             ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
             ->orderBy('r.value_sorting')
             ->execute();
 
-        $result  = [];
+        $result = [];
         foreach ($builder->fetchAll(\PDO::FETCH_ASSOC) as $value) {
             if (!isset($result[$value[$itemIdColumn]])) {
                 $result[$value[$itemIdColumn]] = [];

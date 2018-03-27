@@ -61,7 +61,8 @@ $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_as_wizard'] = array
     (
         'tl_class' => 'clr',
         'submitOnChange'     => true,
-    )
+    ),
+    'sql'       => 'varchar(1) NOT NULL default \'0\''
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_minLevel'] = array
@@ -72,7 +73,8 @@ $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_minLevel'] = array
     'eval'      => array
     (
         'tl_class' => 'clr w50'
-    )
+    ),
+    'sql'       => 'int(11) NOT NULL default \'0\''
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_maxLevel'] = array
@@ -83,5 +85,6 @@ $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_maxLevel'] = array
     'eval'      => array
     (
         'tl_class' => 'w50'
-    )
+    ),
+    'sql'       => 'int(11) NOT NULL default \'0\''
 );

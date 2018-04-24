@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2017 The MetaModels team.
+ * (c) 2012-2018 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -19,8 +19,8 @@
  * @author     David Maack <david.maack@arcor.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2017 The MetaModels team.
- * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0
+ * @copyright  2012-2018 The MetaModels team.
+ * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
 
@@ -58,6 +58,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_table'] = array
         'tl_class'           => 'w50',
         'chosen'             => 'true'
     ),
+    'sql'       => 'varchar(255) NOT NULL default \'\''
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_column'] = array
@@ -74,6 +75,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_column'] = array
         'tl_class'           => 'w50',
         'chosen'             => 'true'
     ),
+    'sql'       => 'varchar(255) NOT NULL default \'\''
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_id'] = array
@@ -90,6 +92,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_id'] = array
         'tl_class'           => 'w50',
         'chosen'             => 'true'
     ),
+    'sql'       => 'varchar(255) NOT NULL default \'\''
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_alias'] = array
@@ -106,6 +109,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_alias'] = array
         'tl_class'           => 'w50',
         'chosen'             => 'true'
     ),
+    'sql'       => 'varchar(255) NOT NULL default \'\''
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sorting'] = array
@@ -122,6 +126,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sorting'] = array
         'tl_class'           => 'w50 clr',
         'chosen'             => 'true'
     ),
+    'sql'       => 'varchar(255) NOT NULL default \'\''
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_where'] = array
@@ -134,7 +139,8 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_where'] = array
         'tl_class'       => 'clr',
         'style'          => 'height: 4em;',
         'decodeEntities' => 'true'
-    )
+    ),
+    'sql'       => 'text NULL'
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filter'] = array
@@ -150,6 +156,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filter'] = array
         'tl_class'           => 'w50',
         'chosen'             => 'true'
     ),
+    'sql'       => 'int(11) unsigned NOT NULL default \'0\''
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filterparams'] = array
@@ -160,7 +167,8 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filterparams'] = arr
     'eval'      => array
     (
         'tl_class'   => 'clr m12'
-    )
+    ),
+    'sql'       => 'text NULL'
 );
 
 $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sort'] = array

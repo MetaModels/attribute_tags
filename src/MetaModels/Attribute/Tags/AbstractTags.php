@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2017 The MetaModels team.
+ * (c) 2012-2018 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,8 +17,8 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2017 The MetaModels team.
- * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0
+ * @copyright  2012-2018 The MetaModels team.
+ * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
 
@@ -261,13 +261,15 @@ abstract class AbstractTags extends BaseComplex
         $arrFieldDef      = parent::getFieldDefinition($arrOverrides);
         $this->widgetMode = $arrOverrides['tag_as_wizard'];
         if ($this->isTreePicker()) {
-            $arrFieldDef['inputType']          = 'DcGeneralTreePicker';
-            $arrFieldDef['eval']['sourceName'] = $this->getTagSource();
-            $arrFieldDef['eval']['fieldType']  = 'checkbox';
-            $arrFieldDef['eval']['idProperty'] = $this->getAliasColumn();
-            $arrFieldDef['eval']['orderField'] = $this->getSortingColumn();
-            $arrFieldDef['eval']['minLevel']   = $arrOverrides['tag_minLevel'];
-            $arrFieldDef['eval']['maxLevel']   = $arrOverrides['tag_maxLevel'];
+            $arrFieldDef['inputType']                   = 'DcGeneralTreePicker';
+            $arrFieldDef['eval']['sourceName']          = $this->getTagSource();
+            $arrFieldDef['eval']['fieldType']           = 'checkbox';
+            $arrFieldDef['eval']['idProperty']          = $this->getAliasColumn();
+            $arrFieldDef['eval']['orderField']          = $this->getSortingColumn();
+            $arrFieldDef['eval']['minLevel']            = $arrOverrides['tag_minLevel'];
+            $arrFieldDef['eval']['maxLevel']            = $arrOverrides['tag_maxLevel'];
+            $arrFieldDef['eval']['pickerOrderProperty'] = $this->getSortingColumn();
+            $arrFieldDef['eval']['pickerSortDirection'] = strtoupper($this->getSortDirection());
         } elseif ($this->widgetMode == 1) {
             // If tag as wizard is true, change the input type.
             $arrFieldDef['inputType'] = 'checkboxWizard';

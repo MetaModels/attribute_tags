@@ -265,7 +265,8 @@ abstract class AbstractTags extends BaseComplex
             $arrFieldDef['eval']['sourceName']          = $this->getTagSource();
             $arrFieldDef['eval']['fieldType']           = 'checkbox';
             $arrFieldDef['eval']['idProperty']          = $this->getAliasColumn();
-            $arrFieldDef['eval']['orderField']          = $this->getSortingColumn();
+            $arrFieldDef['eval']['orderName']           = $this->getColName();
+            $arrFieldDef['eval']['orderField']          = $this->getColName();
             $arrFieldDef['eval']['minLevel']            = $arrOverrides['tag_minLevel'];
             $arrFieldDef['eval']['maxLevel']            = $arrOverrides['tag_maxLevel'];
             $arrFieldDef['eval']['pickerOrderProperty'] = $this->getSortingColumn();

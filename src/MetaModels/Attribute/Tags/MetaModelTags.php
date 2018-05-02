@@ -107,7 +107,7 @@ class MetaModelTags extends AbstractTags
         unset($tables[$recursionKey]);
 
         // Sort items manually for checkbox wizard.
-        if ($this->isCheckboxWizard()) {
+        if ($this->isCheckboxWizard() || $this->isTreePicker()) {
             // Remove deleted referenced items and flip.
             $orderIds = array_flip(array_filter($valueIds));
 
@@ -178,7 +178,7 @@ class MetaModelTags extends AbstractTags
         );
 
         // Manual sorting of items for checkbox wizard.
-        if ($this->isCheckboxWizard()) {
+        if ($this->isCheckboxWizard() || $this->isTreePicker()) {
             // Keep order from input array, and add non existent ids to the end.
             return $sorting[$cacheKey] = array_merge(
                 // Keep order from input array...

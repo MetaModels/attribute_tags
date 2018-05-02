@@ -115,9 +115,9 @@ class BackendSubscriber extends BaseSubscriber
 
         $widget->orderField = $widget->orderField . '__ordered';
 
-        $ordered = array();
+        $ordered = \array_flip(\array_merge([], (array) $model->getProperty($widget->strField)));
         foreach ($options as $option) {
-            $ordered[] = $option['value'];
+            $ordered[$option['value']] = $option['value'];
         }
 
         $widget->{$widget->orderField} = $ordered;

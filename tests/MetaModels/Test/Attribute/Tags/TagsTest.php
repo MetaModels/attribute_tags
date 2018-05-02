@@ -109,6 +109,6 @@ class TagsTest extends TestCase
         $result = $tags->valueToWidget([['alias' => 'alias-value', 'id' => 1], ['alias' => 'alias-value2', 'id' => 2]]);
 
         // It should return the ids instead of the alias.
-        $this->assertSame('1,2', $result);
+        $this->assertSame(['1','2'], $result);
     }
 }

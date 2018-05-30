@@ -129,7 +129,7 @@ class FilterRuleTags extends FilterRule
                     ->execute(
                         array_map(
                             function ($value) {
-                                return str_replace(array('*', '?'), array('%', '_'), $value);
+                                return str_replace(['*', '?'], ['%', '_'], $value);
                             },
                             $arrValues
                         )
@@ -143,7 +143,7 @@ class FilterRuleTags extends FilterRule
             if ($strColNameAlias == 'id') {
                 $values = $arrValues;
             } else {
-                $values = array();
+                $values = [];
                 foreach ($arrValues as $value) {
                     $values[] = array_values(
                         $this->getTagMetaModel()->getAttribute($strColNameAlias)->searchFor($value)
@@ -166,7 +166,7 @@ class FilterRuleTags extends FilterRule
 
         // Get out when no values are available.
         if (!$arrValues) {
-            return array();
+            return [];
         }
 
         $objMatches = $this
@@ -194,7 +194,7 @@ class FilterRuleTags extends FilterRule
      */
     public function flatten(array $array)
     {
-        $return = array();
+        $return = [];
         array_walk_recursive($array, function ($item) use (&$return) {
             $return[] = $item;
         });

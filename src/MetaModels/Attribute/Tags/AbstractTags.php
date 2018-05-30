@@ -232,7 +232,7 @@ abstract class AbstractTags extends BaseComplex
     {
         return array_merge(
             parent::getAttributeSettingNames(),
-            array(
+            [
                 'tag_table',
                 'tag_column',
                 'tag_id',
@@ -249,14 +249,14 @@ abstract class AbstractTags extends BaseComplex
                 'submitOnChange',
                 'filterable',
                 'searchable',
-            )
+            ]
         );
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getFieldDefinition($arrOverrides = array())
+    public function getFieldDefinition($arrOverrides = [])
     {
         $arrFieldDef      = parent::getFieldDefinition($arrOverrides);
         $this->widgetMode = $arrOverrides['tag_as_wizard'];
@@ -307,7 +307,7 @@ abstract class AbstractTags extends BaseComplex
         }
 
         if ((!is_array($varValue)) || empty($varValue)) {
-            return array();
+            return [];
         }
 
         return $this->getValuesFromWidget($varValue);
@@ -333,7 +333,7 @@ abstract class AbstractTags extends BaseComplex
      */
     protected function getExistingTags($itemId, $allTags)
     {
-        $thisExisting = array();
+        $thisExisting = [];
 
         // Determine existing tags for this item.
         /** @noinspection PhpUndefinedFieldInspection */
@@ -367,7 +367,7 @@ abstract class AbstractTags extends BaseComplex
         $database = $this->getDatabase();
 
         if ($tags === null) {
-            $tagIds = array();
+            $tagIds = [];
         } else {
             $tagIds = array_keys($tags);
         }
@@ -386,12 +386,12 @@ abstract class AbstractTags extends BaseComplex
                         implode(',', array_fill(0, count($valuesToRemove), '?'))
                     )
                 )
-                ->execute(array_merge(array($this->get('id'), $itemId), $valuesToRemove));
+                ->execute(array_merge([$this->get('id'), $itemId], $valuesToRemove));
         }
 
         // Second pass, add all new values in a row.
         $valuesToAdd  = array_diff($tagIds, $thisExisting);
-        $insertValues = array();
+        $insertValues = [];
         if ($valuesToAdd) {
             foreach ($valuesToAdd as $valueId) {
                 $insertValues[] = sprintf(
@@ -453,12 +453,12 @@ abstract class AbstractTags extends BaseComplex
                     implode(',', array_fill(0, count($itemIds), '?'))
                 )
             )
-            ->execute(array_merge(array($this->get('id')), $itemIds));
+            ->execute(array_merge([$this->get('id')], $itemIds));
 
         // Now loop over all items and update the values for them.
         // NOTE: we can not loop over the original array, as the item ids are not neccessarily
         // sorted ascending by item id.
-        $insertValues = array();
+        $insertValues = [];
         foreach ($itemIds as $itemId) {
             $insertValues = array_merge(
                 $insertValues,

@@ -97,9 +97,9 @@ class MetaModelTags extends AbstractTags
         $filter->addFilterRule(new StaticIdList($valueIds));
 
         // Prevent recursion.
-        static $tables = array();
+        static $tables = [];
         if (isset($tables[$recursionKey])) {
-            return array();
+            return [];
         }
         $tables[$recursionKey] = $recursionKey;
 
@@ -133,10 +133,10 @@ class MetaModelTags extends AbstractTags
             $parsedItem = $item->parseValue();
 
             $values[$valueId] = array_merge(
-                array(
-                    self::TAGS_RAW => $parsedItem['raw'],
+                [
+                    self::TAGS_RAW      => $parsedItem['raw'],
                     'tag_value_sorting' => $count++
-                ),
+                ],
                 $parsedItem['text']
             );
         }
@@ -246,7 +246,7 @@ class MetaModelTags extends AbstractTags
         $model     = $this->getTagMetaModel();
         $alias     = $this->getAliasColumn();
         $attribute = $model->getAttribute($alias);
-        $valueIds  = array();
+        $valueIds  = [];
 
         if ($attribute) {
             // It is an attribute, we may search for it.
@@ -254,7 +254,7 @@ class MetaModelTags extends AbstractTags
                 if ($attribute instanceof ITranslated) {
                     $ids = $attribute->searchForInLanguages(
                         $value,
-                        array($model->getActiveLanguage(), $model->getFallbackLanguage())
+                        [$model->getActiveLanguage(), $model->getFallbackLanguage()]
                     );
                 } else {
                     $ids = $attribute->searchFor($value);
@@ -309,7 +309,7 @@ class MetaModelTags extends AbstractTags
     protected function calculateFilterOptionsCount($items, &$amountArray)
     {
         $filter = '';
-        $ids    = array();
+        $ids    = [];
         foreach ($items as $item) {
             $ids[] = $item->get('id');
         }
@@ -344,7 +344,7 @@ class MetaModelTags extends AbstractTags
     public function getFilterOptions($idList, $usedOnly, &$arrCount = null)
     {
         if (!$this->isFilterOptionRetrievingPossible($idList)) {
-            return array();
+            return [];
         }
 
         $filter = $this->getTagMetaModel()->getEmptyFilter();
@@ -353,7 +353,7 @@ class MetaModelTags extends AbstractTags
 
         // Add some more filter rules.
         if ($usedOnly) {
-            $this->buildFilterRulesForUsedOnly($filter, $idList ? $idList : array());
+            $this->buildFilterRulesForUsedOnly($filter, $idList ? $idList : []);
         } elseif ($idList && is_array($idList)) {
             $filter->addFilterRule(new StaticIdList($idList));
         }
@@ -407,7 +407,7 @@ class MetaModelTags extends AbstractTags
             $presets      = (array) $this->get('tag_filterparams');
             $presetNames  = $filterSettings->getParameters();
             $filterParams = array_keys($filterSettings->getParameterFilterNames());
-            $processed    = array();
+            $processed    = [];
 
             // We have to use all the preset values we want first.
             foreach ($presets as $presetName => $preset) {
@@ -444,9 +444,9 @@ class MetaModelTags extends AbstractTags
      *
      * @return void
      */
-    public function buildFilterRulesForUsedOnly($filter, $idList = array())
+    public function buildFilterRulesForUsedOnly($filter, $idList = [])
     {
-        $params = array($this->get('id'));
+        $params = [$this->get('id')];
 
         if (empty($idList)) {
             $arrUsedValues = $this
@@ -500,7 +500,7 @@ class MetaModelTags extends AbstractTags
      */
     protected function convertItemsToFilterOptions($items, $displayValue, $aliasColumn, &$count = null)
     {
-        $result = array();
+        $result = [];
         foreach ($items as $item) {
             $parsedDisplay = $item->parseAttribute($displayValue);
             $parsedAlias   = $item->parseAttribute($aliasColumn);
@@ -530,7 +530,7 @@ class MetaModelTags extends AbstractTags
     public function getDataFor($arrIds)
     {
         if (!$this->isProperlyConfigured()) {
-            return array();
+            return [];
         }
 
         $rows = $this
@@ -545,10 +545,10 @@ class MetaModelTags extends AbstractTags
                     $this->parameterMask($arrIds)
                 )
             )
-            ->execute(array_merge($arrIds, array($this->get('id'))));
+            ->execute(array_merge($arrIds, [$this->get('id')]));
 
-        $valueIds     = array();
-        $referenceIds = array();
+        $valueIds     = [];
+        $referenceIds = [];
 
         while ($rows->next()) {
             /** @noinspection PhpUndefinedFieldInspection */
@@ -559,7 +559,7 @@ class MetaModelTags extends AbstractTags
         }
 
         $values = $this->getValuesById($referenceIds);
-        $result = array();
+        $result = [];
         foreach ($valueIds as $itemId => $tagIds) {
             foreach ($tagIds as $tagId) {
                 $result[$itemId][$tagId] = $values[$tagId];

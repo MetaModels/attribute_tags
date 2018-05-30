@@ -25,8 +25,7 @@
  * Register the templates
  */
 TemplateLoader::addFiles(
-    array
-    (
+    [
         'mm_attr_tags' => 'system/modules/metamodelsattribute_tags/templates',
-    )
+    ]
 );

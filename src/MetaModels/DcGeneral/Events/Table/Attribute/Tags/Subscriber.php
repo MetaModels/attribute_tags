@@ -31,8 +31,8 @@ use ContaoCommunityAlliance\DcGeneral\DataDefinition\ConditionChainInterface;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\ConditionInterface;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Definition\PalettesDefinitionInterface;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\NotCondition;
-use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\PropertyValueCondition;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\PropertyConditionChain;
+use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\PropertyValueCondition;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\PropertyInterface;
 use ContaoCommunityAlliance\DcGeneral\Factory\Event\BuildDataDefinitionEvent;
 use MetaModels\DcGeneral\DataDefinition\Palette\Condition\Property\ConditionTableNameIsMetaModel;
@@ -56,31 +56,31 @@ class Subscriber extends BaseSubscriber
         $this
             ->addListener(
                 GetPropertyOptionsEvent::NAME,
-                array($this, 'handleTableNames')
+                [$this, 'handleTableNames']
             )
             ->addListener(
                 GetPropertyOptionsEvent::NAME,
-                array($this, 'getColumnNames')
+                [$this, 'getColumnNames']
             )
             ->addListener(
                 GetPropertyOptionsEvent::NAME,
-                array($this, 'getIntColumnNames')
+                [$this, 'getIntColumnNames']
             )
             ->addListener(
                 GetPropertyOptionsEvent::NAME,
-                array($this, 'getFilters')
+                [$this, 'getFilters']
             )
             ->addListener(
                 BuildWidgetEvent::NAME,
-                array($this, 'getFiltersParams')
+                [$this, 'getFiltersParams']
             )
             ->addListener(
                 BuildDataDefinitionEvent::NAME,
-                array($this, 'buildPaletteRestrictions')
+                [$this, 'buildPaletteRestrictions']
             )
             ->addListener(
                 EncodePropertyValueFromWidgetEvent::NAME,
-                array($this, 'checkQuery')
+                [$this, 'checkQuery']
             );
     }
 
@@ -96,7 +96,7 @@ class Subscriber extends BaseSubscriber
     private function getMetaModelTableNames($keyTranslated, $keyUntranslated)
     {
         $factory = $this->getServiceContainer()->getFactory();
-        $result  = array();
+        $result  = [];
         $tables  = $factory->collectNames();
 
         foreach ($tables as $table) {
@@ -178,7 +178,7 @@ class Subscriber extends BaseSubscriber
     protected function getAttributeNamesFrom($metaModelName)
     {
         $metaModel = $this->getServiceContainer()->getFactory()->getMetaModel($metaModelName);
-        $result    = array();
+        $result    = [];
 
         if ($metaModel === null) {
             return $result;
@@ -208,10 +208,10 @@ class Subscriber extends BaseSubscriber
         $database = $this->getServiceContainer()->getDatabase();
 
         if (!$tableName || !$database->tableExists($tableName)) {
-            return array();
+            return [];
         }
 
-        $result = array();
+        $result = [];
 
         foreach ($database->listFields($tableName) as $arrInfo) {
             if ($arrInfo['type'] != 'index') {
@@ -241,13 +241,12 @@ class Subscriber extends BaseSubscriber
             asort($attributes);
 
             $event->setOptions(
-                array
-                (
+                [
                     $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_column_type']['sql']
                     => array_diff_key($this->getColumnNamesFrom($table), array_flip(array_keys($attributes))),
                     $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_column_type']['attribute']
                     => $attributes
-                )
+                ]
             );
 
             return;
@@ -311,7 +310,7 @@ class Subscriber extends BaseSubscriber
                 ->prepare('SELECT id,name FROM tl_metamodel_filter WHERE pid=? ORDER BY name')
                 ->execute($metaModel->get('id'));
 
-            $result = array();
+            $result = [];
             while ($filter->next()) {
                 $result[$filter->id] = $filter->name;
             }
@@ -380,7 +379,7 @@ class Subscriber extends BaseSubscriber
             return;
         }
 
-        $result = array();
+        $result = [];
 
         foreach ($database->listFields($table) as $arrInfo) {
             if ($arrInfo['type'] != 'index' && $arrInfo['type'] == 'int') {
@@ -407,9 +406,9 @@ class Subscriber extends BaseSubscriber
             || ($currentCondition->getConjunction() != ConditionChainInterface::OR_CONJUNCTION)
         ) {
             if ($currentCondition === null) {
-                $currentCondition = new PropertyConditionChain(array($condition));
+                $currentCondition = new PropertyConditionChain([$condition]);
             } else {
-                $currentCondition = new PropertyConditionChain(array($currentCondition, $condition));
+                $currentCondition = new PropertyConditionChain([$currentCondition, $condition]);
             }
             $currentCondition->setConjunction(ConditionChainInterface::OR_CONJUNCTION);
             $property->setVisibleCondition($currentCondition);
@@ -435,14 +434,14 @@ class Subscriber extends BaseSubscriber
                     if ($property->getName() === $propertyName) {
                         // Show the widget when we are editing a select attribute.
                         $condition = new PropertyConditionChain(
-                            array(
+                            [
                                 new PropertyConditionChain(
-                                    array(
+                                    [
                                         new PropertyValueCondition('type', 'tags'),
                                         new ConditionTableNameIsMetaModel('tag_table', $mask)
-                                    )
+                                    ]
                                 )
-                            ),
+                            ],
                             ConditionChainInterface::OR_CONJUNCTION
                         );
                         // If we want to hide the widget for metamodel tables, do so only when editing a select
@@ -472,12 +471,12 @@ class Subscriber extends BaseSubscriber
         }
 
         $this->buildConditions(
-            array(
-                'tag_id'     => false,
-                'tag_where'  => false,
-                'tag_filter' => true,
+            [
+                'tag_id'           => false,
+                'tag_where'        => false,
+                'tag_filter'       => true,
                 'tag_filterparams' => true,
-            ),
+            ],
             $event->getContainer()->getPalettesDefinition()
         );
     }

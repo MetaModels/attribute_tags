@@ -23,68 +23,58 @@
  * @filesource
  */
 
-$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['metasubselectpalettes']['attr_id']['tags'] = array
-(
-    'presentation' => array
-    (
+$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['metasubselectpalettes']['attr_id']['tags'] = [
+    'presentation' => [
         'tl_class',
         'submitOnChange',
         'tag_as_wizard'
-    ),
-    'functions'    => array
-    (
+    ],
+    'functions'    => [
         'mandatory'
-    ),
-    'overview'     => array
-    (
+    ],
+    'overview'     => [
         'filterable',
         'searchable',
-    )
-);
+    ]
+];
 
 $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['palettes']['__selector__'][] = 'tag_as_wizard';
 
-$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['metasubselectpalettes']['tag_as_wizard'][2] = array(
-    'presentation after tag_as_wizard' => array(
+$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['metasubselectpalettes']['tag_as_wizard'][2] = [
+    'presentation after tag_as_wizard' => [
         'tag_minLevel', 'tag_maxLevel'
-    )
-);
+    ]
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_as_wizard'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_as_wizard'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard'],
     'exclude'   => true,
     'inputType' => 'select',
-    'options'   => array(0, 1, 2, 3),
+    'options'   => [0, 1, 2, 3],
     'reference' => &$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference'],
-    'eval'      => array
-    (
+    'eval'      => [
         'tl_class' => 'clr',
         'submitOnChange'     => true,
-    ),
+    ],
     'sql'       => 'varchar(1) NOT NULL default \'0\''
-);
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_minLevel'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_minLevel'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_minLevel'],
     'exclude'   => true,
     'inputType' => 'text',
-    'eval'      => array
-    (
+    'eval'      => [
         'tl_class' => 'clr w50'
-    ),
+    ],
     'sql'       => 'int(11) NOT NULL default \'0\''
-);
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_maxLevel'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_maxLevel'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_maxLevel'],
     'exclude'   => true,
     'inputType' => 'text',
-    'eval'      => array
-    (
+    'eval'      => [
         'tl_class' => 'w50'
-    ),
+    ],
     'sql'       => 'int(11) NOT NULL default \'0\''
-);
+];

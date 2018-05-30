@@ -43,11 +43,11 @@ class BackendSubscriber extends BaseSubscriber
         $this
             ->addListener(
                 GetPropertyOptionsEvent::NAME,
-                array($this, 'getPropertyOptions')
+                [$this, 'getPropertyOptions']
             )
             ->addListener(
                 ManipulateWidgetEvent::NAME,
-                array($this, 'manipulateTreePrickerForSortOrder')
+                [$this, 'manipulateTreePrickerForSortOrder']
             );
     }
 
@@ -78,7 +78,7 @@ class BackendSubscriber extends BaseSubscriber
         try {
             $options = $attribute->getFilterOptions(null, false);
         } catch (\Exception $exception) {
-            $options = array('Error: ' . $exception->getMessage());
+            $options = ['Error: ' . $exception->getMessage()];
         }
 
         $event->setOptions($options);

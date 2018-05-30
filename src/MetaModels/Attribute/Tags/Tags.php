@@ -51,7 +51,7 @@ class Tags extends AbstractTags
     {
         $strColNameAlias = $this->getAliasColumn();
 
-        $arrResult = array();
+        $arrResult = [];
         if ($varValue) {
             foreach ($varValue as $arrValue) {
                 $arrResult[] = $arrValue[$strColNameAlias];
@@ -69,7 +69,7 @@ class Tags extends AbstractTags
      */
     protected function getValuesFromWidget($varValue)
     {
-        $arrParams = array();
+        $arrParams = [];
         foreach ($varValue as $strValue) {
             $arrParams[] = $strValue;
         }
@@ -91,7 +91,7 @@ class Tags extends AbstractTags
             ->execute($arrParams);
 
         $strColNameId = $this->get('tag_id');
-        $arrResult    = array();
+        $arrResult    = [];
 
         while ($objValue->next()) {
             // Adding the sorting from widget.
@@ -214,7 +214,7 @@ class Tags extends AbstractTags
     public function getFilterOptions($idList, $usedOnly, &$arrCount = null)
     {
         if (!$this->isFilterOptionRetrievingPossible($idList)) {
-            return array();
+            return [];
         }
 
         if ($idList) {
@@ -223,7 +223,7 @@ class Tags extends AbstractTags
             $objValue = $this->retrieveFilterOptionsWithoutIds($usedOnly);
         }
 
-        $result      = array();
+        $result      = [];
         $valueColumn = $this->getValueColumn();
         $aliasColumn = $this->getAliasColumn();
         while ($objValue->next()) {
@@ -244,13 +244,13 @@ class Tags extends AbstractTags
     public function getDataFor($arrIds)
     {
         if (!$this->isProperlyConfigured()) {
-            return array();
+            return [];
         }
 
         $strTableName = $this->getTagSource();
         $strColNameId = $this->getIdColumn();
         $objDB        = $this->getDatabase();
-        $arrReturn    = array();
+        $arrReturn    = [];
         $itemIdColumn = $this->getMetaModel()->getTableName() . '_id';
 
         $objValue = $objDB
@@ -276,7 +276,7 @@ class Tags extends AbstractTags
 
         while ($objValue->next()) {
             if (!isset($arrReturn[$objValue->$itemIdColumn])) {
-                $arrReturn[$objValue->$itemIdColumn] = array();
+                $arrReturn[$objValue->$itemIdColumn] = [];
             }
             $arrData = $objValue->row();
             unset($arrData[$itemIdColumn]);

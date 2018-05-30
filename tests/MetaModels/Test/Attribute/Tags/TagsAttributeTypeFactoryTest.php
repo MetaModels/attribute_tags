@@ -72,7 +72,7 @@ class TagsAttributeTypeFactoryTest extends AttributeTypeFactoryTest
      */
     protected function getAttributeFactories()
     {
-        return array(new AttributeTypeFactory());
+        return [new AttributeTypeFactory()];
     }
 
     /**
@@ -83,11 +83,11 @@ class TagsAttributeTypeFactoryTest extends AttributeTypeFactoryTest
     public function testCreateTags()
     {
         $factory   = new AttributeTypeFactory();
-        $values    = array(
+        $values = [
             'tag_table'  => 'tl_page',
             'tag_column' => 'pid',
             'tag_alias'  => 'alias',
-        );
+        ];
         $attribute = $factory->createInstance(
             $values,
             $this->mockMetaModel('mm_test', 'de', 'en')
@@ -108,11 +108,11 @@ class TagsAttributeTypeFactoryTest extends AttributeTypeFactoryTest
     public function testCreateMetaModelTags()
     {
         $factory   = new AttributeTypeFactory();
-        $values    = array(
+        $values = [
             'tag_table'  => 'mm_page',
             'tag_column' => 'pid',
             'tag_alias'  => 'alias',
-        );
+        ];
         $attribute = $factory->createInstance(
             $values,
             $this->mockMetaModel('mm_test', 'de', 'en')

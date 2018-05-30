@@ -51,7 +51,7 @@ class AttributeTypeFactory implements IAttributeTypeFactory
      */
     public function createInstance($information, $metaModel)
     {
-        if (substr($information['tag_table'], 0, 3) === 'mm_') {
+        if (\substr($information['tag_table'], 0, 3) === 'mm_') {
             return new MetaModelTags($metaModel, $information);
         }
 

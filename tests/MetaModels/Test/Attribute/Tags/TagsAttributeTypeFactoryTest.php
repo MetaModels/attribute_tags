@@ -26,6 +26,8 @@ use MetaModels\Attribute\IAttributeTypeFactory;
 use MetaModels\Attribute\Tags\AttributeTypeFactory;
 use MetaModels\IMetaModel;
 use MetaModels\Test\Attribute\AttributeTypeFactoryTest;
+use MetaModels\Attribute\Tags\Tags;
+use MetaModels\Attribute\Tags\MetaModelTags;
 
 /**
  * Test the attribute factory.
@@ -45,7 +47,7 @@ class TagsAttributeTypeFactoryTest extends AttributeTypeFactoryTest
      */
     protected function mockMetaModel($tableName, $language, $fallbackLanguage)
     {
-        $metaModel = $this->getMockForAbstractClass('MetaModels\IMetaModel');
+        $metaModel = $this->getMockForAbstractClass(IMetaModel::class);
 
         $metaModel
             ->expects($this->any())
@@ -72,7 +74,7 @@ class TagsAttributeTypeFactoryTest extends AttributeTypeFactoryTest
      */
     protected function getAttributeFactories()
     {
-        return array(new AttributeTypeFactory());
+        return [new AttributeTypeFactory()];
     }
 
     /**
@@ -83,17 +85,17 @@ class TagsAttributeTypeFactoryTest extends AttributeTypeFactoryTest
     public function testCreateTags()
     {
         $factory   = new AttributeTypeFactory();
-        $values    = array(
+        $values = [
             'tag_table'  => 'tl_page',
             'tag_column' => 'pid',
             'tag_alias'  => 'alias',
-        );
+        ];
         $attribute = $factory->createInstance(
             $values,
             $this->mockMetaModel('mm_test', 'de', 'en')
         );
 
-        $this->assertInstanceOf('MetaModels\Attribute\Tags\Tags', $attribute);
+        $this->assertInstanceOf(Tags::class, $attribute);
 
         foreach ($values as $key => $value) {
             $this->assertEquals($value, $attribute->get($key), $key);
@@ -108,17 +110,17 @@ class TagsAttributeTypeFactoryTest extends AttributeTypeFactoryTest
     public function testCreateMetaModelTags()
     {
         $factory   = new AttributeTypeFactory();
-        $values    = array(
+        $values = [
             'tag_table'  => 'mm_page',
             'tag_column' => 'pid',
             'tag_alias'  => 'alias',
-        );
+        ];
         $attribute = $factory->createInstance(
             $values,
             $this->mockMetaModel('mm_test', 'de', 'en')
         );
 
-        $this->assertInstanceOf('MetaModels\Attribute\Tags\MetaModelTags', $attribute);
+        $this->assertInstanceOf(MetaModelTags::class, $attribute);
 
         foreach ($values as $key => $value) {
             $this->assertEquals($value, $attribute->get($key), $key);

@@ -51,20 +51,15 @@ class Tags extends AbstractTags
     {
         $strColNameAlias = $this->getAliasColumn();
 
-        $arrResult = array();
+        $arrResult = [];
         if ($varValue) {
             foreach ($varValue as $arrValue) {
                 $arrResult[] = $arrValue[$strColNameAlias];
             }
         }
 
-        // If we have a tree picker, the value must be a comma separated string.
-        if ($this->isTreePicker() && !empty($arrResult)) {
-            return implode(',', $arrResult);
-        }
-
         // We must use string keys.
-        return array_map('strval', $arrResult);
+        return \array_map('strval', $arrResult);
     }
 
     /**
@@ -74,7 +69,7 @@ class Tags extends AbstractTags
      */
     protected function getValuesFromWidget($varValue)
     {
-        $arrParams = array();
+        $arrParams = [];
         foreach ($varValue as $strValue) {
             $arrParams[] = $strValue;
         }
@@ -82,27 +77,27 @@ class Tags extends AbstractTags
         $objValue = $this
             ->getDatabase()
             ->prepare(
-                sprintf(
+                \sprintf(
                     'SELECT %1$s.*
                     FROM %1$s
                     WHERE %2$s IN (%3$s)
                     ORDER BY %4$s',
                     $this->getTagSource(),
                     $this->getAliasColumn(),
-                    implode(',', array_fill(0, count($arrParams), '?')),
+                    \implode(',', \array_fill(0, \count($arrParams), '?')),
                     $this->getSortingColumn()
                 )
             )
             ->execute($arrParams);
 
         $strColNameId = $this->get('tag_id');
-        $arrResult    = array();
+        $arrResult    = [];
 
         while ($objValue->next()) {
             // Adding the sorting from widget.
             $strAlias                                                 = $this->getAliasColumn();
             $arrResult[$objValue->$strColNameId]                      = $objValue->row();
-            $arrResult[$objValue->$strColNameId]['tag_value_sorting'] = array_search($objValue->$strAlias, $varValue);
+            $arrResult[$objValue->$strColNameId]['tag_value_sorting'] = \array_search($objValue->$strAlias, $varValue);
         }
 
         return $arrResult;
@@ -146,12 +141,12 @@ class Tags extends AbstractTags
         return $this
             ->getDatabase()
             ->prepare(
-                sprintf(
+                \sprintf(
                     $sqlQuery,
                     // @codingStandardsIgnoreStart - We want to keep the numbers as comment at the end of the following lines.
                     $this->getTagSource(),                                                    // 1
                     $this->getIdColumn(),                                                     // 2
-                    implode(',', $arrIds),                                                    // 3
+                    \implode(',', $arrIds),                                                    // 3
                     $this->getSortingColumn(),                                                // 4
                     ($this->getWhereColumn() ? ' AND (' . $this->getWhereColumn() . ')' : '') // 5
                 // @codingStandardsIgnoreEnd
@@ -197,7 +192,7 @@ class Tags extends AbstractTags
         return $this
             ->getDatabase()
             ->prepare(
-                sprintf(
+                \sprintf(
                     $sqlQuery,
                     // @codingStandardsIgnoreStart - We want to keep the numbers as comment at the end of the following lines.
                     $this->getTagSource(),       // 1
@@ -219,7 +214,7 @@ class Tags extends AbstractTags
     public function getFilterOptions($idList, $usedOnly, &$arrCount = null)
     {
         if (!$this->isFilterOptionRetrievingPossible($idList)) {
-            return array();
+            return [];
         }
 
         if ($idList) {
@@ -228,7 +223,7 @@ class Tags extends AbstractTags
             $objValue = $this->retrieveFilterOptionsWithoutIds($usedOnly);
         }
 
-        $result      = array();
+        $result      = [];
         $valueColumn = $this->getValueColumn();
         $aliasColumn = $this->getAliasColumn();
         while ($objValue->next()) {
@@ -249,18 +244,18 @@ class Tags extends AbstractTags
     public function getDataFor($arrIds)
     {
         if (!$this->isProperlyConfigured()) {
-            return array();
+            return [];
         }
 
         $strTableName = $this->getTagSource();
         $strColNameId = $this->getIdColumn();
         $objDB        = $this->getDatabase();
-        $arrReturn    = array();
+        $arrReturn    = [];
         $itemIdColumn = $this->getMetaModel()->getTableName() . '_id';
 
         $objValue = $objDB
             ->prepare(
-                sprintf(
+                \sprintf(
                     'SELECT %1$s.*, tl_metamodel_tag_relation.item_id AS %2$s
                     FROM %1$s
                     LEFT JOIN tl_metamodel_tag_relation ON (
@@ -273,7 +268,7 @@ class Tags extends AbstractTags
                     $strTableName,            // 1
                     $itemIdColumn,            // 2
                     $strColNameId,            // 3
-                    implode(',', $arrIds)     // 4
+                    \implode(',', $arrIds)     // 4
                 // @codingStandardsIgnoreEnd
                 )
             )
@@ -281,7 +276,7 @@ class Tags extends AbstractTags
 
         while ($objValue->next()) {
             if (!isset($arrReturn[$objValue->$itemIdColumn])) {
-                $arrReturn[$objValue->$itemIdColumn] = array();
+                $arrReturn[$objValue->$itemIdColumn] = [];
             }
             $arrData = $objValue->row();
             unset($arrData[$itemIdColumn]);

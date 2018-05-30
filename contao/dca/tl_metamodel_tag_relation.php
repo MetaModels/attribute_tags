@@ -21,42 +21,32 @@
 /**
  * Table tl_metamodel_tag_relation
  */
-$GLOBALS['TL_DCA']['tl_metamodel_tag_relation'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_tag_relation'] = [
     // Config
-    'config' => array
-    (
-        'sql' => array
-        (
-            'keys' => array
-            (
+    'config' => [
+        'sql' => [
+            'keys' => [
                 'id'                        => 'primary',
                 'att_id,item_id,value_id'   => 'index'
-            )
-        )
-    ),
+            ]
+        ]
+    ],
     // Fields
-    'fields' => array
-    (
-        'id' => array
-        (
+    'fields' => [
+        'id'            => [
             'sql'                     => 'int(11) unsigned NOT NULL auto_increment'
-        ),
-        'att_id' => array
-        (
+        ],
+        'att_id'        => [
             'sql'                     => 'int(11) unsigned NOT NULL default \'0\''
-        ),
-        'item_id' => array
-        (
+        ],
+        'item_id'       => [
             'sql'                     => 'int(11) unsigned NOT NULL default \'0\''
-        ),
-        'value_sorting' => array
-        (
+        ],
+        'value_sorting' => [
             'sql'                     => 'int(11) unsigned NOT NULL default \'0\''
-        ),
-        'value_id' => array
-        (
+        ],
+        'value_id'      => [
             'sql'                     => 'int(11) unsigned NOT NULL default \'0\''
-        )
-    )
-);
+        ]
+    ]
+];

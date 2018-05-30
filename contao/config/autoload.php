@@ -24,9 +24,8 @@
 /**
  * Register the templates
  */
-TemplateLoader::addFiles(
-    array
-    (
+\Contao\TemplateLoader::addFiles(
+    [
         'mm_attr_tags' => 'system/modules/metamodelsattribute_tags/templates',
-    )
+    ]
 );

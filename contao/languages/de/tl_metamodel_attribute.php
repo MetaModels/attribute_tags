@@ -8,7 +8,7 @@
  *
  * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
  *
- * last-updated: 2018-03-28T19:20:36+02:00
+ * last-updated: 2018-04-24T23:49:32+02:00
  */
 
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['display_legend']                 = 'Anzeigeeinstellungen';

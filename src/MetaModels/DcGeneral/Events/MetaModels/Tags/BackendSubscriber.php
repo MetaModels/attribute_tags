@@ -43,11 +43,11 @@ class BackendSubscriber extends BaseSubscriber
         $this
             ->addListener(
                 GetPropertyOptionsEvent::NAME,
-                array($this, 'getPropertyOptions')
+                [$this, 'getPropertyOptions']
             )
             ->addListener(
                 ManipulateWidgetEvent::NAME,
-                array($this, 'manipulateTreePrickerForSortOrder')
+                [$this, 'manipulateTreePrickerForSortOrder']
             );
     }
 
@@ -78,7 +78,7 @@ class BackendSubscriber extends BaseSubscriber
         try {
             $options = $attribute->getFilterOptions(null, false);
         } catch (\Exception $exception) {
-            $options = array('Error: ' . $exception->getMessage());
+            $options = ['Error: ' . $exception->getMessage()];
         }
 
         $event->setOptions($options);
@@ -99,7 +99,7 @@ class BackendSubscriber extends BaseSubscriber
         }
 
         $options = (array) $widget->options;
-        if (0 === count($options)) {
+        if (0 === \count($options)) {
             return;
         }
 
@@ -115,9 +115,9 @@ class BackendSubscriber extends BaseSubscriber
 
         $widget->orderField = $widget->orderField . '__ordered';
 
-        $ordered = array();
+        $ordered = \array_flip(\array_merge([], (array) $model->getProperty($widget->strField)));
         foreach ($options as $option) {
-            $ordered[] = $option['value'];
+            $ordered[$option['value']] = $option['value'];
         }
 
         $widget->{$widget->orderField} = $ordered;

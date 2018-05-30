@@ -1,5 +1,5 @@
-<?php if (count($this->raw) > 0):
-$arrTextFormat = array();
+<?php if (count((array)$this->raw) > 0):
+$arrTextFormat = [];
 
 foreach ($this->raw as $arrTag)
 {

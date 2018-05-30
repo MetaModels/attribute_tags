@@ -24,6 +24,7 @@
 
 namespace MetaModels\DcGeneral\Events\Table\Attribute\Tags;
 
+use Contao\Database;
 use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\Event\BuildWidgetEvent;
 use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\Event\EncodePropertyValueFromWidgetEvent;
 use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\Event\GetPropertyOptionsEvent;
@@ -506,7 +507,7 @@ class Subscriber extends BaseSubscriber
         $values = $event->getPropertyValueBag();
 
         if ($where) {
-            $objDB = \Database::getInstance();
+            $objDB = Database::getInstance();
 
             $strTableName  = $values->getPropertyValue('tag_table');
             $strColNameId  = $values->getPropertyValue('tag_id');

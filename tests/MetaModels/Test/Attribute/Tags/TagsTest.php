@@ -42,7 +42,7 @@ class TagsTest extends TestCase
      */
     protected function mockMetaModel($language, $fallbackLanguage)
     {
-        $metaModel = $this->getMockForAbstractClass('MetaModels\IMetaModel');
+        $metaModel = $this->getMockForAbstractClass(IMetaModel::class);
 
         $metaModel
             ->expects($this->any())
@@ -70,7 +70,7 @@ class TagsTest extends TestCase
     public function testInstantiation()
     {
         $text = new Tags($this->mockMetaModel('en', 'en'));
-        $this->assertInstanceOf('MetaModels\Attribute\Tags\Tags', $text);
+        $this->assertInstanceOf(Tags::class, $text);
     }
 
     /**
@@ -81,7 +81,7 @@ class TagsTest extends TestCase
     public function testInstantiationMetaModelSelect()
     {
         $text = new MetaModelTags($this->mockMetaModel('en', 'en'));
-        $this->assertInstanceOf('MetaModels\Attribute\Tags\MetaModelTags', $text);
+        $this->assertInstanceOf(MetaModelTags::class, $text);
     }
 
     /**

@@ -1,5 +1,5 @@
 <?php if (count((array)$this->raw) > 0): ?>
-<ul class="tags<?php echo $this->additional_class; ?>">
+<ul class="tags<?= $this->additional_class; ?>">
 <?php
 $i    = 0;
 $last = (count((array)$this->raw) - 1);
@@ -17,7 +17,7 @@ foreach ($this->raw as $arrTag):
         $arrClass[] = standardize($arrTag[$this->alias]);
     }
 ?>
-<li class="<?php echo implode(' ', $arrClass); ?>"><?php echo $arrTag[$this->value]; ?></li>
+<li class="<?= implode(' ', $arrClass); ?>"><?= $arrTag[$this->value]; ?></li>
 <?php endforeach; ?>
 </ul>
 <?php endif; ?>

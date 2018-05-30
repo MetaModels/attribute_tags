@@ -58,13 +58,8 @@ class Tags extends AbstractTags
             }
         }
 
-        // If we have a tree picker, the value must be a comma separated string.
-        if ($this->isTreePicker() && !empty($arrResult)) {
-            return implode(',', $arrResult);
-        }
-
         // We must use string keys.
-        return array_map('strval', $arrResult);
+        return \array_map('strval', $arrResult);
     }
 
     /**
@@ -90,7 +85,7 @@ class Tags extends AbstractTags
         foreach ($values->fetchAll(\PDO::FETCH_ASSOC) as $value) {
             // Adding the sorting from widget.
             $result[$value[$idname]]                      = $value;
-            $result[$value[$idname]]['tag_value_sorting'] = array_search($value[$alias], $varValue);
+            $result[$value[$idname]]['tag_value_sorting'] = \array_search($value[$alias], $varValue);
         }
 
         return $result;
@@ -104,7 +99,7 @@ class Tags extends AbstractTags
     public function getFilterOptions($idList, $usedOnly, &$arrCount = null)
     {
         if (!$this->isFilterOptionRetrievingPossible($idList)) {
-            return array();
+            return [];
         }
 
         $idColumn = $this->getIdColumn();

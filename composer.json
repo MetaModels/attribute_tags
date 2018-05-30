@@ -31,18 +31,21 @@
     "irc": "irc://irc.freenode.org/contao.mm",
     "source": "https://github.com/MetaModels/attribute_tags"
   },
-  "require": {
-    "php": "^5.6 | ^7.0",
-    "contao/core-bundle": "^4.4",
-    "contao-community-alliance/dc-general": "~2.1@dev",
-    "metamodels/core": "~2.1@dev",
-    "symfony/dependency-injection": "^3.3",
-    "symfony/http-kernel": "^3.3"
-  },
-  "require-dev": {
-    "cyberspectrum/contao-toolbox": "~0.7",
-    "phpcq/all-tasks": "~1.2",
-    "contao/manager-plugin": "~2.1"
+    "require": {
+        "php": "^5.6 || ^7.0",
+        "contao/core-bundle": "^4.4",
+        "contao-community-alliance/dc-general": "^2.1@dev",
+        "metamodels/core": "^2.1@dev",
+        "symfony/dependency-injection": "^3.3",
+        "symfony/http-kernel": "^3.3"
+    },
+    "require-dev": {
+        "cyberspectrum/contao-toolbox": "^0.7",
+        "phpcq/all-tasks": "^1.2",
+        "contao/manager-plugin": "^2.1"
+    },
+  "conflict": {
+    "contao/core": "3.4.0"
   },
   "autoload": {
     "psr-4": {
@@ -71,5 +74,11 @@
       "dev-master": "2.0.x-dev",
       "dev-feature/contao4": "2.1.x-dev"
     }
-  }
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "git@gitlab.com:metamodels/core.git"
+    }
+  ]
 }

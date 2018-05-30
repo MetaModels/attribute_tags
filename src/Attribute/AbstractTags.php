@@ -75,7 +75,7 @@ abstract class AbstractTags extends BaseComplex
 
         if (null === $connection) {
             // @codingStandardsIgnoreStart
-            @trigger_error(
+            @\trigger_error(
                 'Connection is missing. It has to be passed in the constructor. Fallback will be dropped.',
                 E_USER_DEPRECATED
             );
@@ -211,7 +211,7 @@ abstract class AbstractTags extends BaseComplex
      */
     protected function getWhereColumn()
     {
-        return $this->get('tag_where') ? html_entity_decode($this->get('tag_where')) : null;
+        return $this->get('tag_where') ? \html_entity_decode($this->get('tag_where')) : null;
     }
 
     /**
@@ -282,9 +282,9 @@ abstract class AbstractTags extends BaseComplex
      */
     public function getAttributeSettingNames()
     {
-        return array_merge(
+        return \array_merge(
             parent::getAttributeSettingNames(),
-            array(
+            [
                 'tag_table',
                 'tag_column',
                 'tag_id',
@@ -301,14 +301,14 @@ abstract class AbstractTags extends BaseComplex
                 'submitOnChange',
                 'filterable',
                 'searchable',
-            )
+            ]
         );
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getFieldDefinition($arrOverrides = array())
+    public function getFieldDefinition($arrOverrides = [])
     {
         $arrFieldDef      = parent::getFieldDefinition($arrOverrides);
         $this->widgetMode = $arrOverrides['tag_as_wizard'];
@@ -317,11 +317,12 @@ abstract class AbstractTags extends BaseComplex
             $arrFieldDef['eval']['sourceName']          = $this->getTagSource();
             $arrFieldDef['eval']['fieldType']           = 'checkbox';
             $arrFieldDef['eval']['idProperty']          = $this->getAliasColumn();
-            $arrFieldDef['eval']['orderField']          = $this->getSortingColumn();
+            $arrFieldDef['eval']['orderName']           = $this->getColName();
+            $arrFieldDef['eval']['orderField']          = $this->getColName();
             $arrFieldDef['eval']['minLevel']            = $arrOverrides['tag_minLevel'];
             $arrFieldDef['eval']['maxLevel']            = $arrOverrides['tag_maxLevel'];
             $arrFieldDef['eval']['pickerOrderProperty'] = $this->getSortingColumn();
-            $arrFieldDef['eval']['pickerSortDirection'] = strtoupper($this->getSortDirection());
+            $arrFieldDef['eval']['pickerSortDirection'] = \strtoupper($this->getSortDirection());
         } elseif ($this->widgetMode == 1) {
             // If tag as wizard is true, change the input type.
             $arrFieldDef['inputType'] = 'checkboxWizard';
@@ -353,12 +354,12 @@ abstract class AbstractTags extends BaseComplex
     public function widgetToValue($varValue, $itemId)
     {
         // If we are in tree mode, we got a comma separate list.
-        if ($this->isTreePicker() && !empty($varValue) && !is_array($varValue)) {
-            $varValue = explode(',', $varValue);
+        if ($this->isTreePicker() && !empty($varValue) && !\is_array($varValue)) {
+            $varValue = \explode(',', $varValue);
         }
 
-        if ((!is_array($varValue)) || empty($varValue)) {
-            return array();
+        if ((!\is_array($varValue)) || empty($varValue)) {
+            return [];
         }
 
         return $this->getValuesFromWidget($varValue);
@@ -384,7 +385,7 @@ abstract class AbstractTags extends BaseComplex
      */
     protected function getExistingTags($itemId, $allTags)
     {
-        $thisExisting = array();
+        $thisExisting = [];
 
         // Determine existing tags for this item.
         /** @noinspection PhpUndefinedFieldInspection */
@@ -418,14 +419,14 @@ abstract class AbstractTags extends BaseComplex
         $database = $this->getDatabase();
 
         if ($tags === null) {
-            $tagIds = array();
+            $tagIds = [];
         } else {
-            $tagIds = array_keys($tags);
+            $tagIds = \array_keys($tags);
         }
         $thisExisting = $this->getExistingTags($itemId, $existingTagIds);
 
         // First pass, delete all not mentioned anymore.
-        $valuesToRemove = array_diff($thisExisting, $tagIds);
+        $valuesToRemove = \array_diff($thisExisting, $tagIds);
         if ($valuesToRemove) {
             $this->connection
                 ->createQueryBuilder()
@@ -440,11 +441,11 @@ abstract class AbstractTags extends BaseComplex
         }
 
         // Second pass, add all new values in a row.
-        $valuesToAdd  = array_diff($tagIds, $thisExisting);
-        $insertValues = array();
+        $valuesToAdd  = \array_diff($tagIds, $thisExisting);
+        $insertValues = [];
         if ($valuesToAdd) {
             foreach ($valuesToAdd as $valueId) {
-                $insertValues[] = sprintf(
+                $insertValues[] = \sprintf(
                     '(%s,%s,%s,%s)',
                     $this->get('id'),
                     $itemId,
@@ -455,7 +456,7 @@ abstract class AbstractTags extends BaseComplex
         }
 
         // Third pass, update all sorting values.
-        $valuesToUpdate = array_diff($tagIds, $valuesToAdd);
+        $valuesToUpdate = \array_diff($tagIds, $valuesToAdd);
         if ($valuesToUpdate) {
             foreach ($valuesToUpdate as $valueId) {
                 if (!array_key_exists('tag_value_sorting', $tags[$valueId])) {
@@ -487,30 +488,30 @@ abstract class AbstractTags extends BaseComplex
         }
 
         $database = $this->getDatabase();
-        $itemIds  = array_keys($arrValues);
-        sort($itemIds);
+        $itemIds  = \array_keys($arrValues);
+        \sort($itemIds);
 
         // Load all existing tags for all items to be updated, keep the ordering to item Id
         // so we can benefit from the batch deletion and insert algorithm.
         $existingTagIds = $database
             ->prepare(
-                sprintf(
+                \sprintf(
                     'SELECT * FROM %1$s
                     WHERE att_id=?
                     AND item_id IN (%2$s)
                     ORDER BY item_id ASC',
                     'tl_metamodel_tag_relation',
-                    implode(',', array_fill(0, count($itemIds), '?'))
+                    \implode(',', \array_fill(0, \count($itemIds), '?'))
                 )
             )
-            ->execute(array_merge(array($this->get('id')), $itemIds));
+            ->execute(\array_merge([$this->get('id')], $itemIds));
 
         // Now loop over all items and update the values for them.
         // NOTE: we can not loop over the original array, as the item ids are not neccessarily
         // sorted ascending by item id.
-        $insertValues = array();
+        $insertValues = [];
         foreach ($itemIds as $itemId) {
-            $insertValues = array_merge(
+            $insertValues = \array_merge(
                 $insertValues,
                 $this->setDataForItem($itemId, $arrValues[$itemId], $existingTagIds)
             );
@@ -520,7 +521,7 @@ abstract class AbstractTags extends BaseComplex
             $database->execute(
                 'INSERT INTO tl_metamodel_tag_relation
                 (att_id, item_id, value_sorting, value_id)
-                VALUES ' . implode(',', $insertValues)
+                VALUES ' . \implode(',', $insertValues)
             );
         }
     }
@@ -532,7 +533,7 @@ abstract class AbstractTags extends BaseComplex
      */
     public function unsetDataFor($arrIds)
     {
-        if (!is_array($arrIds)) {
+        if (!\is_array($arrIds)) {
             throw new \RuntimeException(
                 __METHOD__ . '() invalid parameter given! Array of ids is needed.',
                 1

@@ -24,6 +24,8 @@ namespace MetaModels\AttributeTagsBundle\Test\Attribute;
 
 use Doctrine\DBAL\Connection;
 use MetaModels\AttributeTagsBundle\Attribute\AttributeTypeFactory;
+use MetaModels\AttributeTagsBundle\Attribute\MetaModelTags;
+use MetaModels\AttributeTagsBundle\Attribute\Tags;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
 use MetaModels\Helper\TableManipulator;
 use MetaModels\IFactory;
@@ -49,7 +51,7 @@ class TagsAttributeTypeFactoryTest extends TestCase
      */
     protected function mockMetaModel($tableName, $language, $fallbackLanguage)
     {
-        $metaModel = $this->getMockForAbstractClass('MetaModels\IMetaModel');
+        $metaModel = $this->getMockForAbstractClass(IMetaModel::class);
 
         $metaModel
             ->expects($this->any())
@@ -108,7 +110,7 @@ class TagsAttributeTypeFactoryTest extends TestCase
         $filterFactory = $this->getMockForAbstractClass(IFilterSettingFactory::class);
         $factory       = new AttributeTypeFactory($connection, $manipulator, $factory, $filterFactory);
 
-        $values    = [
+        $values = [
             'tag_table'  => 'tl_page',
             'tag_column' => 'pid',
             'tag_alias'  => 'alias',
@@ -118,7 +120,7 @@ class TagsAttributeTypeFactoryTest extends TestCase
             $this->mockMetaModel('mm_test', 'de', 'en')
         );
 
-        $this->assertInstanceOf('MetaModels\Attribute\Tags\Tags', $attribute);
+        $this->assertInstanceOf(Tags::class, $attribute);
 
         foreach ($values as $key => $value) {
             $this->assertEquals($value, $attribute->get($key), $key);
@@ -138,7 +140,7 @@ class TagsAttributeTypeFactoryTest extends TestCase
         $filterFactory = $this->getMockForAbstractClass(IFilterSettingFactory::class);
         $factory       = new AttributeTypeFactory($connection, $manipulator, $factory, $filterFactory);
 
-        $values    = [
+        $values = [
             'tag_table'  => 'mm_page',
             'tag_column' => 'pid',
             'tag_alias'  => 'alias',
@@ -148,7 +150,7 @@ class TagsAttributeTypeFactoryTest extends TestCase
             $this->mockMetaModel('mm_test', 'de', 'en')
         );
 
-        $this->assertInstanceOf('MetaModels\Attribute\Tags\MetaModelTags', $attribute);
+        $this->assertInstanceOf(MetaModelTags::class, $attribute);
 
         foreach ($values as $key => $value) {
             $this->assertEquals($value, $attribute->get($key), $key);

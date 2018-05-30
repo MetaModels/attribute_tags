@@ -28,10 +28,8 @@
  * Table tl_metamodel_attribute
  */
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['metapalettes']['tags extends _simpleattribute_'] = array
-(
-    '+display' => array
-    (
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['metapalettes']['tags extends _simpleattribute_'] = [
+    '+display' => [
         'tag_table after description',
         'tag_column',
         'tag_id',
@@ -41,16 +39,14 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['metapalettes']['tags extends _simp
         'tag_where',
         'tag_filter',
         'tag_filterparams'
-    )
-);
+    ]
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_table'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_table'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_table'],
     'exclude'   => true,
     'inputType' => 'select',
-    'eval'      => array
-    (
+    'eval'      => [
         'includeBlankOption' => true,
         'mandatory'          => true,
         'doNotSaveEmpty'     => true,
@@ -58,16 +54,15 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_table'] = array
         'submitOnChange'     => true,
         'tl_class'           => 'w50',
         'chosen'             => 'true'
-    ),
-);
+    ],
+    'sql'       => 'varchar(255) NOT NULL default \'\''
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_column'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_column'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_column'],
     'exclude'   => true,
     'inputType' => 'select',
-    'eval'      => array
-    (
+    'eval'      => [
         'includeBlankOption' => true,
         'mandatory'          => true,
         'doNotSaveEmpty'     => true,
@@ -75,16 +70,15 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_column'] = array
         'submitOnChange'     => true,
         'tl_class'           => 'w50',
         'chosen'             => 'true'
-    ),
-);
+    ],
+    'sql'       => 'varchar(255) NOT NULL default \'\''
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_id'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_id'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_id'],
     'exclude'   => true,
     'inputType' => 'select',
-    'eval'      => array
-    (
+    'eval'      => [
         'includeBlankOption' => true,
         'mandatory'          => true,
         'doNotSaveEmpty'     => true,
@@ -92,16 +86,15 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_id'] = array
         'submitOnChange'     => true,
         'tl_class'           => 'w50',
         'chosen'             => 'true'
-    ),
-);
+    ],
+    'sql'       => 'varchar(255) NOT NULL default \'\''
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_alias'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_alias'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_alias'],
     'exclude'   => true,
     'inputType' => 'select',
-    'eval'      => array
-    (
+    'eval'      => [
         'includeBlankOption' => true,
         'mandatory'          => true,
         'doNotSaveEmpty'     => true,
@@ -109,16 +102,15 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_alias'] = array
         'submitOnChange'     => true,
         'tl_class'           => 'w50',
         'chosen'             => 'true'
-    ),
-);
+    ],
+    'sql'       => 'varchar(255) NOT NULL default \'\''
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sorting'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sorting'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sorting'],
     'exclude'   => true,
     'inputType' => 'select',
-    'eval'      => array
-    (
+    'eval'      => [
         'includeBlankOption' => true,
         'mandatory'          => true,
         'doNotSaveEmpty'     => true,
@@ -126,58 +118,54 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sorting'] = array
         'submitOnChange'     => true,
         'tl_class'           => 'w50 clr',
         'chosen'             => 'true'
-    ),
-);
+    ],
+    'sql'       => 'varchar(255) NOT NULL default \'\''
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_where'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_where'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_where'],
     'exclude'   => true,
     'inputType' => 'textarea',
-    'eval'      => array
-    (
+    'eval'      => [
         'tl_class'       => 'clr',
         'style'          => 'height: 4em;',
         'decodeEntities' => 'true'
-    )
-);
+    ],
+    'sql'       => 'text NULL'
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filter'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filter'] = [
     'label'            => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_filter'],
     'exclude'          => true,
     'inputType'        => 'select',
-    'eval'             => array
-    (
+    'eval'             => [
         'includeBlankOption' => true,
         'alwaysSave'         => true,
         'submitOnChange'     => true,
         'tl_class'           => 'w50',
         'chosen'             => 'true'
-    ),
-);
+    ],
+    'sql'       => 'int(11) unsigned NOT NULL default \'0\''
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filterparams'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filterparams'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_filterparams'],
     'exclude'   => true,
     'inputType' => 'mm_subdca',
-    'eval'      => array
-    (
+    'eval'      => [
         'tl_class'   => 'clr m12'
-    )
-);
+    ],
+    'sql'       => 'text NULL'
+];
 
-$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sort'] = array
-(
+$GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sort'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort'],
     'exclude'   => true,
     'inputType' => 'select',
-    'options'   => array('asc', 'desc'),
-    'eval'      => array
-    (
+    'options'   => ['asc', 'desc'],
+    'eval'      => [
         'tl_class' => 'w50',
-    ),
+    ],
     'reference' => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sort_directions'],
     'sql'       => "varchar(10) NOT NULL default 'asc'"
-);
+];

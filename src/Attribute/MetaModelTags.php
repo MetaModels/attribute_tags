@@ -141,9 +141,9 @@ class MetaModelTags extends AbstractTags
         $filter->addFilterRule(new StaticIdList($valueIds));
 
         // Prevent recursion.
-        static $tables = array();
+        static $tables = [];
         if (isset($tables[$recursionKey])) {
-            return array();
+            return [];
         }
         $tables[$recursionKey] = $recursionKey;
 
@@ -151,16 +151,16 @@ class MetaModelTags extends AbstractTags
         unset($tables[$recursionKey]);
 
         // Sort items manually for checkbox wizard.
-        if ($this->isCheckboxWizard()) {
+        if ($this->isCheckboxWizard() || $this->isTreePicker()) {
             // Remove deleted referenced items and flip.
-            $orderIds = array_flip(array_filter($valueIds));
+            $orderIds = \array_flip(\array_filter($valueIds));
 
             foreach ($items as $item) {
                 $orderIds[$item->get('id')] = $item;
             }
             $items = new Items(
-                array_values(
-                    array_filter(
+                \array_values(
+                    \array_filter(
                         $orderIds,
                         function ($itemOrId) {
                             return $itemOrId instanceof IItem;
@@ -176,11 +176,11 @@ class MetaModelTags extends AbstractTags
             $valueId    = $item->get('id');
             $parsedItem = $item->parseValue();
 
-            $values[$valueId] = array_merge(
-                array(
-                    self::TAGS_RAW => $parsedItem['raw'],
+            $values[$valueId] = \array_merge(
+                [
+                    self::TAGS_RAW      => $parsedItem['raw'],
                     'tag_value_sorting' => $count++
-                ),
+                ],
                 $parsedItem['text']
             );
         }
@@ -198,12 +198,12 @@ class MetaModelTags extends AbstractTags
     private function sortIdsBySortingColumn($idList)
     {
         // Only one item, what shall we sort here then?
-        if (1 === count($idList)) {
+        if (1 === \count($idList)) {
             return $idList;
         }
 
         static $sorting;
-        if (isset($sorting[$cacheKey = $this->get('id') . implode(',', $idList)])) {
+        if (isset($sorting[$cacheKey = $this->get('id') . \implode(',', $idList)])) {
             return $sorting[$cacheKey];
         }
 
@@ -222,23 +222,23 @@ class MetaModelTags extends AbstractTags
         );
 
         // Manual sorting of items for checkbox wizard.
-        if ($this->isCheckboxWizard()) {
+        if ($this->isCheckboxWizard() || $this->isTreePicker()) {
             // Keep order from input array, and add non existent ids to the end.
-            return $sorting[$cacheKey] = array_merge(
+            return $sorting[$cacheKey] = \array_merge(
                 // Keep order from input array...
-                array_intersect($idList, $itemIds),
+                \array_intersect($idList, $itemIds),
                 // ... and add non existent ids to the end.
-                array_diff($idList, $itemIds)
+                \array_diff($idList, $itemIds)
             );
         }
         // Flip to have id as key and index on value.
-        $orderIds = array_flip($idList);
+        $orderIds = \array_flip($idList);
         // Loop over items and set $id => $id
         foreach ($itemIds as $itemId) {
             $orderIds[$itemId] = $itemId;
         }
         // Use new order and add non existent ids to the end.
-        return $sorting[$cacheKey] = array_merge($itemIds, array_diff($idList, $itemIds));
+        return $sorting[$cacheKey] = \array_merge($itemIds, \array_diff($idList, $itemIds));
     }
 
     /**
@@ -270,14 +270,14 @@ class MetaModelTags extends AbstractTags
         unset($valueId, $value);
 
         // Sort the values now.
-        $sortedIds = $this->sortIdsBySortingColumn(array_keys($varValue));
+        $sortedIds = $this->sortIdsBySortingColumn(\array_keys($varValue));
         $result    = [];
         foreach ($sortedIds as $id) {
             $result[] = $alias[$id];
         }
 
         // We must use string keys.
-        return array_map('strval', $result);
+        return \array_map('strval', $result);
     }
 
     /**
@@ -290,7 +290,7 @@ class MetaModelTags extends AbstractTags
         $model     = $this->getTagMetaModel();
         $alias     = $this->getAliasColumn();
         $attribute = $model->getAttribute($alias);
-        $valueIds  = array();
+        $valueIds  = [];
 
         if ($attribute) {
             // It is an attribute, we may search for it.
@@ -298,7 +298,7 @@ class MetaModelTags extends AbstractTags
                 if ($attribute instanceof ITranslated) {
                     $ids = $attribute->searchForInLanguages(
                         $value,
-                        array($model->getActiveLanguage(), $model->getFallbackLanguage())
+                        [$model->getActiveLanguage(), $model->getFallbackLanguage()]
                     );
                 } else {
                     $ids = $attribute->searchFor($value);
@@ -309,7 +309,7 @@ class MetaModelTags extends AbstractTags
                     break;
                 }
                 if ($ids) {
-                    $valueIds = array_merge($valueIds, $ids);
+                    $valueIds = \array_merge($valueIds, $ids);
                 }
             }
         } else {
@@ -331,7 +331,7 @@ class MetaModelTags extends AbstractTags
                 $valueIds = $result->fetchAll(\PDO::FETCH_COLUMN);
 
                 if (empty($valueIds)) {
-                    throw new \RuntimeException('Could not translate value ' . var_export($varValue, true));
+                    throw new \RuntimeException('Could not translate value ' . \var_export($varValue, true));
                 }
             }
         }
@@ -370,7 +370,7 @@ class MetaModelTags extends AbstractTags
             $builder
                 ->andWhere('value_id IN (:valueIds)')
                 ->setParameter('valueIds', $ids, Connection::PARAM_STR_ARRAY);
-            if ($idList && is_array($idList)) {
+            if ($idList && \is_array($idList)) {
                 $builder
                     ->andWhere('item_id IN (:itemIds)')
                     ->setParameter('itemIds', $idList, Connection::PARAM_STR_ARRAY);
@@ -391,7 +391,7 @@ class MetaModelTags extends AbstractTags
     public function getFilterOptions($idList, $usedOnly, &$arrCount = null)
     {
         if (!$this->isFilterOptionRetrievingPossible($idList)) {
-            return array();
+            return [];
         }
 
         $filter = $this->getTagMetaModel()->getEmptyFilter();
@@ -400,8 +400,8 @@ class MetaModelTags extends AbstractTags
 
         // Add some more filter rules.
         if ($usedOnly) {
-            $this->buildFilterRulesForUsedOnly($filter, $idList ? $idList : array());
-        } elseif ($idList && is_array($idList)) {
+            $this->buildFilterRulesForUsedOnly($filter, $idList ? $idList : []);
+        } elseif ($idList && \is_array($idList)) {
             $filter->addFilterRule(new StaticIdList($idList));
         }
 
@@ -449,12 +449,12 @@ class MetaModelTags extends AbstractTags
             $values       = $_GET;
             $presets      = (array) $this->get('tag_filterparams');
             $presetNames  = $filterSettings->getParameters();
-            $filterParams = array_keys($filterSettings->getParameterFilterNames());
-            $processed    = array();
+            $filterParams = \array_keys($filterSettings->getParameterFilterNames());
+            $processed    = [];
 
             // We have to use all the preset values we want first.
             foreach ($presets as $presetName => $preset) {
-                if (in_array($presetName, $presetNames)) {
+                if (\in_array($presetName, $presetNames)) {
                     $processed[$presetName] = $preset['value'];
                 }
             }
@@ -464,12 +464,12 @@ class MetaModelTags extends AbstractTags
             // * or are overridable.
             foreach ($filterParams as $parameter) {
                 // Unknown parameter? - next please.
-                if (!array_key_exists($parameter, $values)) {
+                if (!\array_key_exists($parameter, $values)) {
                     continue;
                 }
 
                 // Not a preset or allowed to override? - use value.
-                if ((!array_key_exists($parameter, $presets)) || $presets[$parameter]['use_get']) {
+                if ((!\array_key_exists($parameter, $presets)) || $presets[$parameter]['use_get']) {
                     $processed[$parameter] = $values[$parameter];
                 }
             }
@@ -487,7 +487,7 @@ class MetaModelTags extends AbstractTags
      *
      * @return void
      */
-    public function buildFilterRulesForUsedOnly($filter, $idList = array())
+    public function buildFilterRulesForUsedOnly($filter, $idList = [])
     {
         $result = $this
             ->getConnection()
@@ -522,7 +522,7 @@ class MetaModelTags extends AbstractTags
      */
     protected function convertItemsToFilterOptions($items, $displayValue, $aliasColumn, &$count = null)
     {
-        $result = array();
+        $result = [];
         foreach ($items as $item) {
             $parsedDisplay = $item->parseAttribute($displayValue);
             $parsedAlias   = $item->parseAttribute($aliasColumn);
@@ -571,12 +571,13 @@ class MetaModelTags extends AbstractTags
 
         $valueIds     = [];
         $referenceIds = [];
+
         foreach ($rows as $row) {
             $referenceIds[] = $valueIds[$row['id']][] = $row['value'];
         }
 
         $values = $this->getValuesById($referenceIds);
-        $result = array();
+        $result = [];
         foreach ($valueIds as $itemId => $tagIds) {
             foreach ($tagIds as $tagId) {
                 $result[$itemId][$tagId] = $values[$tagId];

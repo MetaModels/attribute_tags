@@ -17,6 +17,7 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
+ * @author     Richard Henkenjohann <richardhenkenjohann@googlemail.com>
  * @copyright  2012-2018 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
@@ -32,8 +33,8 @@ use ContaoCommunityAlliance\DcGeneral\DataDefinition\ConditionChainInterface;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\ConditionInterface;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Definition\PalettesDefinitionInterface;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\NotCondition;
-use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\PropertyValueCondition;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\PropertyConditionChain;
+use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\PropertyValueCondition;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\PropertyInterface;
 use ContaoCommunityAlliance\DcGeneral\Factory\Event\BuildDataDefinitionEvent;
 use Doctrine\DBAL\Connection;
@@ -137,21 +138,21 @@ class BackendListener
 
         $result = $this->getMetaModelTableNames($translated, $untranslated);
         foreach ($this->connection->getSchemaManager()->listTableNames() as $table) {
-            if (0 !== strpos($table, 'mm_')) {
+            if (0 !== \strpos($table, 'mm_')) {
                 $result[$sqlTable][$table] = $table;
             }
         }
 
         if (\is_array($result[$translated])) {
-            asort($result[$translated]);
+            \asort($result[$translated]);
         }
 
         if (\is_array($result[$untranslated])) {
-            asort($result[$untranslated]);
+            \asort($result[$untranslated]);
         }
 
         if (\is_array($result[$sqlTable])) {
-            asort($result[$sqlTable]);
+            \asort($result[$sqlTable]);
         }
 
         $event->setOptions($result);
@@ -173,7 +174,7 @@ class BackendListener
         $result = $this->getColumnNamesFrom($event->getModel()->getProperty('tag_table'));
 
         if (!empty($result)) {
-            asort($result);
+            \asort($result);
             $event->setOptions($result);
         }
     }
@@ -286,9 +287,9 @@ class BackendListener
 
         $this->buildConditions(
             [
-                'tag_id'     => false,
-                'tag_where'  => false,
-                'tag_filter' => true,
+                'tag_id'           => false,
+                'tag_where'        => false,
+                'tag_filter'       => true,
                 'tag_filterparams' => true,
             ],
             $event->getContainer()->getPalettesDefinition()
@@ -333,7 +334,7 @@ class BackendListener
                 $query->execute();
             } catch (\Exception $e) {
                 throw new \RuntimeException(
-                    sprintf(
+                    \sprintf(
                         '%s %s',
                         $this->translator->trans('sql_error', [], 'contao_tl_metamodel_attribute'),
                         $e->getMessage()
@@ -360,9 +361,9 @@ class BackendListener
         foreach ($tables as $table) {
             $metaModel = $this->factory->getMetaModel($table);
             if ($metaModel->isTranslated()) {
-                $result[$keyTranslated][$table] = sprintf('%s (%s)', $metaModel->get('name'), $table);
+                $result[$keyTranslated][$table] = \sprintf('%s (%s)', $metaModel->get('name'), $table);
             } else {
-                $result[$keyUntranslated][$table] = sprintf('%s (%s)', $metaModel->get('name'), $table);
+                $result[$keyUntranslated][$table] = \sprintf('%s (%s)', $metaModel->get('name'), $table);
             }
         }
 
@@ -378,9 +379,9 @@ class BackendListener
      */
     private function getColumnNamesFrom($table)
     {
-        if (0 === strpos($table, 'mm_')) {
+        if (0 === \strpos($table, 'mm_')) {
             $attributes = $this->getAttributeNamesFrom($table);
-            asort($attributes);
+            \asort($attributes);
 
             $sql       = $this->translator->trans(
                 'tl_metamodel_attribute.tag_column_type.sql',
@@ -394,9 +395,9 @@ class BackendListener
             );
 
             return [
-                $sql       => array_diff_key(
+                $sql       => \array_diff_key(
                     $this->getColumnNamesFromTable($table),
-                    array_flip(array_keys($attributes))
+                    \array_flip(\array_keys($attributes))
                 ),
                 $attribute => $attributes,
             ];
@@ -424,13 +425,13 @@ class BackendListener
         $fieldList = $this->connection->getSchemaManager()->listTableColumns($tableName);
 
         foreach ($fieldList as $column) {
-            if (($typeFilter === null) || in_array($column->getType()->getName(), $typeFilter)) {
+            if (($typeFilter === null) || \in_array($column->getType()->getName(), $typeFilter)) {
                 $result[$column->getName()] = $column->getName();
             }
         }
 
         if (!empty($result)) {
-            asort($result);
+            \asort($result);
             return $result;
         }
 
@@ -457,7 +458,7 @@ class BackendListener
             $column = $attribute->getColName();
             $type   = $attribute->get('type');
 
-            $result[$column] = sprintf('%s (%s - %s)', $name, $column, $type);
+            $result[$column] = \sprintf('%s (%s - %s)', $name, $column, $type);
         }
 
         return $result;
@@ -518,9 +519,9 @@ class BackendListener
             || ($currentCondition->getConjunction() != ConditionChainInterface::OR_CONJUNCTION)
         ) {
             if ($currentCondition === null) {
-                $currentCondition = new PropertyConditionChain(array($condition));
+                $currentCondition = new PropertyConditionChain([$condition]);
             } else {
-                $currentCondition = new PropertyConditionChain(array($currentCondition, $condition));
+                $currentCondition = new PropertyConditionChain([$currentCondition, $condition]);
             }
             $currentCondition->setConjunction(ConditionChainInterface::OR_CONJUNCTION);
             $property->setVisibleCondition($currentCondition);
@@ -544,6 +545,6 @@ class BackendListener
         }
 
         return ('tl_metamodel_attribute' === $event->getEnvironment()->getDataDefinition()->getName())
-            && in_array($event->getPropertyName(), $fields);
+            && \in_array($event->getPropertyName(), $fields);
     }
 }

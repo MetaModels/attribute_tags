@@ -108,7 +108,7 @@ class FilterRuleTags extends FilterRule
     {
         $strColNameId    = $this->objAttribute->get('tag_id') ?: 'id';
         $strColNameAlias = $this->objAttribute->get('tag_alias');
-        $arrValues       = is_array($this->value) ? $this->value : explode(',', $this->value);
+        $arrValues       = \is_array($this->value) ? $this->value : \explode(',', $this->value);
 
         if (!$this->isMetaModel()) {
             if ($strColNameAlias) {
@@ -116,17 +116,17 @@ class FilterRuleTags extends FilterRule
                 $objDB          = $this->objAttribute->getMetaModel()->getServiceContainer()->getDatabase();
                 $objSelectIds   = $objDB
                     ->prepare(
-                        sprintf(
+                        \sprintf(
                             'SELECT %1$s FROM %2$s WHERE %3$s',
                             $strColNameId,
                             $strTableNameId,
-                            implode(' OR ', array_fill(0, count($arrValues), $strColNameAlias . ' LIKE ?'))
+                            \implode(' OR ', \array_fill(0, \count($arrValues), $strColNameAlias . ' LIKE ?'))
                         )
                     )
                     ->execute(
-                        array_map(
+                        \array_map(
                             function ($value) {
-                                return str_replace(array('*', '?'), array('%', '_'), $value);
+                                return \str_replace(['*', '?'], ['%', '_'], $value);
                             },
                             $arrValues
                         )
@@ -134,15 +134,15 @@ class FilterRuleTags extends FilterRule
 
                 $arrValues = $objSelectIds->fetchEach($strColNameId);
             } else {
-                $arrValues = array_map('intval', $arrValues);
+                $arrValues = \array_map('intval', $arrValues);
             }
         } else {
             if ($strColNameAlias == 'id') {
                 $values = $arrValues;
             } else {
-                $values = array();
+                $values = [];
                 foreach ($arrValues as $value) {
-                    $values[] = array_values(
+                    $values[] = \array_values(
                         $this->getTagMetaModel()->getAttribute($strColNameAlias)->searchFor($value)
                     );
                 }
@@ -163,7 +163,7 @@ class FilterRuleTags extends FilterRule
 
         // Get out when no values are available.
         if (!$arrValues) {
-            return array();
+            return [];
         }
 
         $objMatches = $this
@@ -174,7 +174,7 @@ class FilterRuleTags extends FilterRule
             ->prepare(
                 'SELECT item_id as id
                 FROM tl_metamodel_tag_relation
-                WHERE value_id IN (' . implode(',', $arrValues) . ')
+                WHERE value_id IN (' . \implode(',', $arrValues) . ')
                 AND att_id = ?'
             )
             ->execute($this->objAttribute->get('id'));
@@ -191,8 +191,8 @@ class FilterRuleTags extends FilterRule
      */
     public function flatten(array $array)
     {
-        $return = array();
-        array_walk_recursive($array, function ($item) use (&$return) {
+        $return = [];
+        \array_walk_recursive($array, function ($item) use (&$return) {
             $return[] = $item;
         });
         return $return;

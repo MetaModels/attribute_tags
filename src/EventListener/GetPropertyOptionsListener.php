@@ -57,7 +57,7 @@ class GetPropertyOptionsListener
         try {
             $options = $attribute->getFilterOptions(null, false);
         } catch (\Exception $exception) {
-            $options = array('Error: ' . $exception->getMessage());
+            $options = ['Error: ' . $exception->getMessage()];
         }
 
         $event->setOptions($options);

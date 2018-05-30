@@ -48,7 +48,7 @@ class TagsTest extends TestCase
      */
     protected function mockMetaModel($tableName, $language, $fallbackLanguage)
     {
-        $metaModel = $this->getMockForAbstractClass('MetaModels\IMetaModel');
+        $metaModel = $this->getMockForAbstractClass(IMetaModel::class);
 
         $metaModel
             ->expects($this->any())
@@ -80,7 +80,7 @@ class TagsTest extends TestCase
             [],
             $this->getMockBuilder(Connection::class)->disableOriginalConstructor()->getMock()
         );
-        $this->assertInstanceOf('MetaModels\AttributeTagsBundle\Attribute\Tags', $text);
+        $this->assertInstanceOf(Tags::class, $text);
     }
 
     /**
@@ -98,7 +98,7 @@ class TagsTest extends TestCase
             $this->getMockForAbstractClass(IFilterSettingFactory::class)
 
         );
-        $this->assertInstanceOf('MetaModels\AttributeTagsBundle\Attribute\MetaModelTags', $text);
+        $this->assertInstanceOf(MetaModelTags::class, $text);
     }
 
     /**
@@ -127,6 +127,6 @@ class TagsTest extends TestCase
         $result = $tags->valueToWidget([['alias' => 'alias-value', 'id' => 1], ['alias' => 'alias-value2', 'id' => 2]]);
 
         // It should return the ids instead of the alias.
-        $this->assertSame('1,2', $result);
+        $this->assertSame(['1','2'], $result);
     }
 }

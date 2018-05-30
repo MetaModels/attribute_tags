@@ -103,9 +103,9 @@ class Subscriber extends BaseSubscriber
         foreach ($tables as $table) {
             $metaModel = $factory->getMetaModel($table);
             if ($metaModel->isTranslated()) {
-                $result[$keyTranslated][$table] = sprintf('%s (%s)', $metaModel->get('name'), $table);
+                $result[$keyTranslated][$table] = \sprintf('%s (%s)', $metaModel->get('name'), $table);
             } else {
-                $result[$keyUntranslated][$table] = sprintf('%s (%s)', $metaModel->get('name'), $table);
+                $result[$keyUntranslated][$table] = \sprintf('%s (%s)', $metaModel->get('name'), $table);
             }
         }
 
@@ -132,21 +132,21 @@ class Subscriber extends BaseSubscriber
         $result = $this->getMetaModelTableNames($translated, $untranslated);
 
         foreach ($database->listTables() as $table) {
-            if ((substr($table, 0, 3) !== 'mm_')) {
+            if ((\substr($table, 0, 3) !== 'mm_')) {
                 $result[$sqlTable][$table] = $table;
             }
         }
 
-        if (is_array($result[$translated])) {
-            asort($result[$translated]);
+        if (\is_array($result[$translated])) {
+            \asort($result[$translated]);
         }
 
-        if (is_array($result[$untranslated])) {
-            asort($result[$untranslated]);
+        if (\is_array($result[$untranslated])) {
+            \asort($result[$untranslated]);
         }
 
-        if (is_array($result[$sqlTable])) {
-            asort($result[$sqlTable]);
+        if (\is_array($result[$sqlTable])) {
+            \asort($result[$sqlTable]);
         }
 
         $event->setOptions($result);
@@ -190,7 +190,7 @@ class Subscriber extends BaseSubscriber
             $column = $attribute->getColName();
             $type   = $attribute->get('type');
 
-            $result[$column] = sprintf('%s (%s - %s)', $name, $column, $type);
+            $result[$column] = \sprintf('%s (%s - %s)', $name, $column, $type);
         }
 
         return $result;
@@ -237,14 +237,14 @@ class Subscriber extends BaseSubscriber
      */
     public function handleColumnNames(GetPropertyOptionsEvent $event, $table)
     {
-        if (substr($table, 0, 3) === 'mm_') {
+        if (\substr($table, 0, 3) === 'mm_') {
             $attributes = self::getAttributeNamesFrom($table);
-            asort($attributes);
+            \asort($attributes);
 
             $event->setOptions(
                 [
                     $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_column_type']['sql']
-                    => array_diff_key($this->getColumnNamesFrom($table), array_flip(array_keys($attributes))),
+                    => \array_diff_key($this->getColumnNamesFrom($table), \array_flip(\array_keys($attributes))),
                     $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_column_type']['attribute']
                     => $attributes
                 ]
@@ -256,7 +256,7 @@ class Subscriber extends BaseSubscriber
         $result = $this->getColumnNamesFrom($table);
 
         if (!empty($result)) {
-            asort($result);
+            \asort($result);
             $event->setOptions($result);
         }
     }
@@ -513,7 +513,7 @@ class Subscriber extends BaseSubscriber
             $strColNameId  = $values->getPropertyValue('tag_id');
             $strSortColumn = $values->getPropertyValue('tag_sorting') ?: $strColNameId;
 
-            $query = sprintf(
+            $query = \sprintf(
                 'SELECT COUNT(rel.value_id) as mm_count, %1$s.*
                 FROM %1$s
                 LEFT JOIN tl_metamodel_tag_relation as rel
@@ -537,7 +537,7 @@ class Subscriber extends BaseSubscriber
                     ->execute();
             } catch (\Exception $e) {
                 throw new \RuntimeException(
-                    sprintf(
+                    \sprintf(
                         '%s %s',
                         $GLOBALS['TL_LANG']['tl_metamodel_attribute']['sql_error'],
                         $e->getMessage()

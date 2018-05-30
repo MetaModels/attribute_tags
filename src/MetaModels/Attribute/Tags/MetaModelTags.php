@@ -109,14 +109,14 @@ class MetaModelTags extends AbstractTags
         // Sort items manually for checkbox wizard.
         if ($this->isCheckboxWizard() || $this->isTreePicker()) {
             // Remove deleted referenced items and flip.
-            $orderIds = array_flip(array_filter($valueIds));
+            $orderIds = \array_flip(\array_filter($valueIds));
 
             foreach ($items as $item) {
                 $orderIds[$item->get('id')] = $item;
             }
             $items = new Items(
-                array_values(
-                    array_filter(
+                \array_values(
+                    \array_filter(
                         $orderIds,
                         function ($itemOrId) {
                             return $itemOrId instanceof IItem;
@@ -132,7 +132,7 @@ class MetaModelTags extends AbstractTags
             $valueId    = $item->get('id');
             $parsedItem = $item->parseValue();
 
-            $values[$valueId] = array_merge(
+            $values[$valueId] = \array_merge(
                 [
                     self::TAGS_RAW      => $parsedItem['raw'],
                     'tag_value_sorting' => $count++
@@ -154,12 +154,12 @@ class MetaModelTags extends AbstractTags
     private function sortIdsBySortingColumn($idList)
     {
         // Only one item, what shall we sort here then?
-        if (1 === count($idList)) {
+        if (1 === \count($idList)) {
             return $idList;
         }
 
         static $sorting;
-        if (isset($sorting[$cacheKey = $this->get('id') . implode(',', $idList)])) {
+        if (isset($sorting[$cacheKey = $this->get('id') . \implode(',', $idList)])) {
             return $sorting[$cacheKey];
         }
 
@@ -180,21 +180,21 @@ class MetaModelTags extends AbstractTags
         // Manual sorting of items for checkbox wizard.
         if ($this->isCheckboxWizard() || $this->isTreePicker()) {
             // Keep order from input array, and add non existent ids to the end.
-            return $sorting[$cacheKey] = array_merge(
+            return $sorting[$cacheKey] = \array_merge(
                 // Keep order from input array...
-                array_intersect($idList, $itemIds),
+                \array_intersect($idList, $itemIds),
                 // ... and add non existent ids to the end.
-                array_diff($idList, $itemIds)
+                \array_diff($idList, $itemIds)
             );
         }
         // Flip to have id as key and index on value.
-        $orderIds = array_flip($idList);
+        $orderIds = \array_flip($idList);
         // Loop over items and set $id => $id
         foreach ($itemIds as $itemId) {
             $orderIds[$itemId] = $itemId;
         }
         // Use new order and add non existent ids to the end.
-        return $sorting[$cacheKey] = array_merge($itemIds, array_diff($idList, $itemIds));
+        return $sorting[$cacheKey] = \array_merge($itemIds, \array_diff($idList, $itemIds));
     }
 
     /**
@@ -226,14 +226,14 @@ class MetaModelTags extends AbstractTags
         unset($valueId, $value);
 
         // Sort the values now.
-        $sortedIds = $this->sortIdsBySortingColumn(array_keys($varValue));
+        $sortedIds = $this->sortIdsBySortingColumn(\array_keys($varValue));
         $result    = [];
         foreach ($sortedIds as $id) {
             $result[] = $alias[$id];
         }
 
         // We must use string keys.
-        return array_map('strval', $result);
+        return \array_map('strval', $result);
     }
 
     /**
@@ -265,7 +265,7 @@ class MetaModelTags extends AbstractTags
                     break;
                 }
                 if ($ids) {
-                    $valueIds = array_merge($valueIds, $ids);
+                    $valueIds = \array_merge($valueIds, $ids);
                 }
             }
         } else {
@@ -276,7 +276,7 @@ class MetaModelTags extends AbstractTags
             } else {
                 $result = $this->getDatabase()
                     ->prepare(
-                        sprintf(
+                        \sprintf(
                             'SELECT v.id FROM %1$s AS v WHERE v.%2$s IN (%3$s) LIMIT 1',
                             $model->getTableName(),
                             $alias,
@@ -287,7 +287,7 @@ class MetaModelTags extends AbstractTags
 
                 /** @noinspection PhpUndefinedFieldInspection */
                 if (!$result->numRows) {
-                    throw new \RuntimeException('Could not translate value ' . var_export($varValue, true));
+                    throw new \RuntimeException('Could not translate value ' . \var_export($varValue, true));
                 }
 
                 $valueIds = $result->fetchEach('id');
@@ -315,13 +315,13 @@ class MetaModelTags extends AbstractTags
         }
 
         if ($ids) {
-            $filter = sprintf(' AND value_id IN (%1$s)', $this->parameterMask($ids));
+            $filter = \sprintf(' AND value_id IN (%1$s)', $this->parameterMask($ids));
         }
 
         $counts = $this
             ->getDatabase()
             ->prepare(
-                sprintf(
+                \sprintf(
                     'SELECT value_id, COUNT(item_id) AS amount FROM %1$s WHERE att_id="%2$s" %3$s GROUP BY value_id',
                     $this->getReferenceTable(),
                     $this->get('id'),
@@ -354,7 +354,7 @@ class MetaModelTags extends AbstractTags
         // Add some more filter rules.
         if ($usedOnly) {
             $this->buildFilterRulesForUsedOnly($filter, $idList ? $idList : []);
-        } elseif ($idList && is_array($idList)) {
+        } elseif ($idList && \is_array($idList)) {
             $filter->addFilterRule(new StaticIdList($idList));
         }
 
@@ -406,12 +406,12 @@ class MetaModelTags extends AbstractTags
             $values       = $_GET;
             $presets      = (array) $this->get('tag_filterparams');
             $presetNames  = $filterSettings->getParameters();
-            $filterParams = array_keys($filterSettings->getParameterFilterNames());
+            $filterParams = \array_keys($filterSettings->getParameterFilterNames());
             $processed    = [];
 
             // We have to use all the preset values we want first.
             foreach ($presets as $presetName => $preset) {
-                if (in_array($presetName, $presetNames)) {
+                if (\in_array($presetName, $presetNames)) {
                     $processed[$presetName] = $preset['value'];
                 }
             }
@@ -421,12 +421,12 @@ class MetaModelTags extends AbstractTags
             // * or are overridable.
             foreach ($filterParams as $parameter) {
                 // Unknown parameter? - next please.
-                if (!array_key_exists($parameter, $values)) {
+                if (!\array_key_exists($parameter, $values)) {
                     continue;
                 }
 
                 // Not a preset or allowed to override? - use value.
-                if ((!array_key_exists($parameter, $presets)) || $presets[$parameter]['use_get']) {
+                if ((!\array_key_exists($parameter, $presets)) || $presets[$parameter]['use_get']) {
                     $processed[$parameter] = $values[$parameter];
                 }
             }
@@ -471,11 +471,11 @@ class MetaModelTags extends AbstractTags
 
             $arrUsedValues = $this->getDatabase()
                 ->prepare($query)
-                ->execute(array_merge($params, $idList))
+                ->execute(\array_merge($params, $idList))
                 ->fetchEach('value');
         }
 
-        $arrUsedValues = array_filter(
+        $arrUsedValues = \array_filter(
             $arrUsedValues,
             function ($value) {
                 return !empty($value);
@@ -536,7 +536,7 @@ class MetaModelTags extends AbstractTags
         $rows = $this
             ->getDatabase()
             ->prepare(
-                sprintf(
+                \sprintf(
                     'SELECT item_id AS id, value_id AS value
                     FROM tl_metamodel_tag_relation
                     WHERE tl_metamodel_tag_relation.item_id IN (%1$s)
@@ -545,7 +545,7 @@ class MetaModelTags extends AbstractTags
                     $this->parameterMask($arrIds)
                 )
             )
-            ->execute(array_merge($arrIds, [$this->get('id')]));
+            ->execute(\array_merge($arrIds, [$this->get('id')]));
 
         $valueIds     = [];
         $referenceIds = [];

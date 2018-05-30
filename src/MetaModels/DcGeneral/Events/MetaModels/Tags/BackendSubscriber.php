@@ -99,7 +99,7 @@ class BackendSubscriber extends BaseSubscriber
         }
 
         $options = (array) $widget->options;
-        if (0 === count($options)) {
+        if (0 === \count($options)) {
             return;
         }
 

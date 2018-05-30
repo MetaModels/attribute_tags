@@ -59,7 +59,7 @@ class Tags extends AbstractTags
         }
 
         // We must use string keys.
-        return array_map('strval', $arrResult);
+        return \array_map('strval', $arrResult);
     }
 
     /**
@@ -77,14 +77,14 @@ class Tags extends AbstractTags
         $objValue = $this
             ->getDatabase()
             ->prepare(
-                sprintf(
+                \sprintf(
                     'SELECT %1$s.*
                     FROM %1$s
                     WHERE %2$s IN (%3$s)
                     ORDER BY %4$s',
                     $this->getTagSource(),
                     $this->getAliasColumn(),
-                    implode(',', array_fill(0, count($arrParams), '?')),
+                    \implode(',', \array_fill(0, \count($arrParams), '?')),
                     $this->getSortingColumn()
                 )
             )
@@ -97,7 +97,7 @@ class Tags extends AbstractTags
             // Adding the sorting from widget.
             $strAlias                                                 = $this->getAliasColumn();
             $arrResult[$objValue->$strColNameId]                      = $objValue->row();
-            $arrResult[$objValue->$strColNameId]['tag_value_sorting'] = array_search($objValue->$strAlias, $varValue);
+            $arrResult[$objValue->$strColNameId]['tag_value_sorting'] = \array_search($objValue->$strAlias, $varValue);
         }
 
         return $arrResult;
@@ -141,12 +141,12 @@ class Tags extends AbstractTags
         return $this
             ->getDatabase()
             ->prepare(
-                sprintf(
+                \sprintf(
                     $sqlQuery,
                     // @codingStandardsIgnoreStart - We want to keep the numbers as comment at the end of the following lines.
                     $this->getTagSource(),                                                    // 1
                     $this->getIdColumn(),                                                     // 2
-                    implode(',', $arrIds),                                                    // 3
+                    \implode(',', $arrIds),                                                    // 3
                     $this->getSortingColumn(),                                                // 4
                     ($this->getWhereColumn() ? ' AND (' . $this->getWhereColumn() . ')' : '') // 5
                 // @codingStandardsIgnoreEnd
@@ -192,7 +192,7 @@ class Tags extends AbstractTags
         return $this
             ->getDatabase()
             ->prepare(
-                sprintf(
+                \sprintf(
                     $sqlQuery,
                     // @codingStandardsIgnoreStart - We want to keep the numbers as comment at the end of the following lines.
                     $this->getTagSource(),       // 1
@@ -255,7 +255,7 @@ class Tags extends AbstractTags
 
         $objValue = $objDB
             ->prepare(
-                sprintf(
+                \sprintf(
                     'SELECT %1$s.*, tl_metamodel_tag_relation.item_id AS %2$s
                     FROM %1$s
                     LEFT JOIN tl_metamodel_tag_relation ON (
@@ -268,7 +268,7 @@ class Tags extends AbstractTags
                     $strTableName,            // 1
                     $itemIdColumn,            // 2
                     $strColNameId,            // 3
-                    implode(',', $arrIds)     // 4
+                    \implode(',', $arrIds)     // 4
                 // @codingStandardsIgnoreEnd
                 )
             )

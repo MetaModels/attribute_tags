@@ -13,11 +13,6 @@
  * @package    MetaModels
  * @subpackage AttributeTags
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @author     Christian de la Haye <service@delahaye.de>
- * @author     Andreas Isaak <info@andreas-isaak.de>
- * @author     Andreas Nölke <zero@brothers-project.de>
- * @author     David Maack <david.maack@arcor.de>
- * @author     Patrick Kahl <kahl.patrick@googlemail.com>
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
@@ -82,10 +77,11 @@ class MetaModelTags extends AbstractTags
      * Retrieve the values with the given ids.
      *
      * @param string[] $valueIds The ids of the values to retrieve.
+     * @param string[] $attrOnly The attribute names to fetch or empty to fetch all.
      *
      * @return array
      */
-    protected function getValuesById($valueIds)
+    protected function getValuesById($valueIds, $attrOnly = [])
     {
         if (empty($valueIds)) {
             return [];
@@ -103,7 +99,8 @@ class MetaModelTags extends AbstractTags
         }
         $tables[$recursionKey] = $recursionKey;
 
-        $items = $metaModel->findByFilter($filter, $this->getSortingColumn(), 0, 0, $this->getSortDirection());
+        $items =
+            $metaModel->findByFilter($filter, $this->getSortingColumn(), 0, 0, $this->getSortDirection(), $attrOnly);
         unset($tables[$recursionKey]);
 
         // Sort items manually for checkbox wizard.
@@ -294,7 +291,10 @@ class MetaModelTags extends AbstractTags
             }
         }
 
-        return $this->getValuesById($valueIds);
+        return $this->getValuesById(
+            $valueIds,
+            [$this->getIdColumn(), $this->getAliasColumn(), $this->getValueColumn()]
+        );
     }
 
     /**

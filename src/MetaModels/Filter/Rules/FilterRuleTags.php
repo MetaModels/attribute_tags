@@ -34,9 +34,6 @@ use MetaModels\IMetaModel;
 
 /**
  * This is the MetaModelFilterRule class for handling select fields.
- *
- * @package AttributeTags
- * @author  Christian Schiffler <c.schiffler@cyberspectrum.de>
  */
 class FilterRuleTags extends FilterRule
 {

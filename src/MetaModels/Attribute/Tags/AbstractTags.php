@@ -253,6 +253,21 @@ abstract class AbstractTags extends BaseComplex
     }
 
     /**
+     * Get the picker input type.
+     *
+     * @return string
+     */
+    private function getPickerType()
+    {
+        $sourceName = $this->getTagSource();
+        if (!\in_array($sourceName, ['tl_page', 'tl_files'])) {
+            return 'DcGeneralTreePicker';
+        }
+
+        return $sourceName === 'tl_page' ? 'pageTree' : 'fileTree';
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getFieldDefinition($arrOverrides = [])
@@ -260,7 +275,7 @@ abstract class AbstractTags extends BaseComplex
         $arrFieldDef      = parent::getFieldDefinition($arrOverrides);
         $this->widgetMode = $arrOverrides['tag_as_wizard'];
         if ($this->isTreePicker()) {
-            $arrFieldDef['inputType']                   = 'DcGeneralTreePicker';
+            $arrFieldDef['inputType']                   = $this->getPickerType();
             $arrFieldDef['eval']['sourceName']          = $this->getTagSource();
             $arrFieldDef['eval']['fieldType']           = 'checkbox';
             $arrFieldDef['eval']['idProperty']          = $this->getAliasColumn();

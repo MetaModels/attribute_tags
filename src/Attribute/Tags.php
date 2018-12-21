@@ -86,6 +86,9 @@ class Tags extends AbstractTags
             $result[$value[$idname]]                      = $value;
             $result[$value[$idname]]['tag_value_sorting'] = \array_search($value[$alias], $varValue);
         }
+        uasort($result, function ($value1, $value2) {
+            return ($value1['tag_value_sorting'] - $value2['tag_value_sorting']);
+        });
 
         return $result;
     }

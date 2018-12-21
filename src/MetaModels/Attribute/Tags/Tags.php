@@ -98,6 +98,9 @@ class Tags extends AbstractTags
             $arrResult[$objValue->$strColNameId]                      = $objValue->row();
             $arrResult[$objValue->$strColNameId]['tag_value_sorting'] = \array_search($objValue->$strAlias, $varValue);
         }
+        uasort($arrResult, function ($value1, $value2) {
+            return ($value1['tag_value_sorting'] - $value2['tag_value_sorting']);
+        });
 
         return $arrResult;
     }

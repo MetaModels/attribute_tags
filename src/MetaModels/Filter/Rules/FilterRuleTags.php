@@ -10,8 +10,7 @@
  *
  * This project is provided in good faith and hope to be usable by anyone.
  *
- * @package    MetaModels
- * @subpackage AttributeTags
+ * @package    MetaModels/attribute_tags
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Andreas Isaak <info@andreas-isaak.de>
  * @author     Christian de la Haye <service@delahaye.de>
@@ -35,9 +34,6 @@ use MetaModels\IMetaModel;
 
 /**
  * This is the MetaModelFilterRule class for handling select fields.
- *
- * @package AttributeTags
- * @author  Christian Schiffler <c.schiffler@cyberspectrum.de>
  */
 class FilterRuleTags extends FilterRule
 {

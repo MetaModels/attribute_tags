@@ -23,7 +23,6 @@
 
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
-use Contao\Database\Result;
 use Contao\System;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\BaseComplex;
@@ -390,55 +389,21 @@ abstract class AbstractTags extends BaseComplex
     }
 
     /**
-     * Loop over the Result until the item id is not matching anymore the requested item id.
-     *
-     * @param string $itemId  The item id for which the ids shall be retrieved.
-     *
-     * @param Result $allTags The database result from which the ids shall be extracted.
-     *
-     * @return array
-     */
-    protected function getExistingTags($itemId, $allTags)
-    {
-        $thisExisting = [];
-
-        // Determine existing tags for this item.
-        /** @noinspection PhpUndefinedFieldInspection */
-        if (($allTags->item_id == $itemId)) {
-            /** @noinspection PhpUndefinedFieldInspection */
-            $thisExisting[] = $allTags->value_id;
-        }
-
-        /** @noinspection PhpUndefinedFieldInspection */
-        while ($allTags->next() && ($allTags->item_id == $itemId)) {
-            /** @noinspection PhpUndefinedFieldInspection */
-            $thisExisting[] = $allTags->value_id;
-        }
-
-        return $thisExisting;
-    }
-
-    /**
      * Update the tag ids for a given item.
      *
-     * @param int    $itemId         The item for which data shall be set for.
-     *
-     * @param array  $tags           The tag ids that shall be set for the item.
-     *
-     * @param Result $existingTagIds The sql result containing the tag ids present in the database.
+     * @param int   $itemId       The item for which data shall be set for.
+     * @param array $tags         The tag ids that shall be set for the item.
+     * @param array $thisExisting The existing item ids.
      *
      * @return array
      */
-    private function setDataForItem($itemId, $tags, $existingTagIds)
+    private function setDataForItem($itemId, $tags, $thisExisting)
     {
-        $database = $this->getDatabase();
-
         if ($tags === null) {
             $tagIds = [];
         } else {
             $tagIds = \array_keys($tags);
         }
-        $thisExisting = $this->getExistingTags($itemId, $existingTagIds);
 
         // First pass, delete all not mentioned anymore.
         $valuesToRemove = \array_diff($thisExisting, $tagIds);
@@ -460,33 +425,36 @@ abstract class AbstractTags extends BaseComplex
         $insertValues = [];
         if ($valuesToAdd) {
             foreach ($valuesToAdd as $valueId) {
-                $insertValues[] = \sprintf(
-                    '(%s,%s,%s,%s)',
-                    $this->get('id'),
-                    $itemId,
-                    (int) $tags[$valueId]['tag_value_sorting'],
-                    $valueId
-                );
+                $insertValues[] = [
+                    'attId'   => $this->get('id'),
+                    'itemId'  => $itemId,
+                    'sorting' => (int) $tags[$valueId]['tag_value_sorting'],
+                    'valueId' => $valueId
+                ];
             }
         }
 
         // Third pass, update all sorting values.
         $valuesToUpdate = \array_diff($tagIds, $valuesToAdd);
         if ($valuesToUpdate) {
+            $query = $this->connection
+                ->createQueryBuilder()
+                ->update('tl_metamodel_tag_relation')
+                ->set('value_sorting', ':sorting')
+                ->where('att_id=:attId')
+                ->andWhere('item_id=:itemId')
+                ->andWhere('value_id=:valueId')
+                ->setParameter('attId', $this->get('id'))
+                ->setParameter('itemId', $itemId);
+
             foreach ($valuesToUpdate as $valueId) {
                 if (!array_key_exists('tag_value_sorting', $tags[$valueId])) {
                     continue;
                 }
-
-                $database
-                    ->prepare(
-                        'UPDATE tl_metamodel_tag_relation
-                        SET value_sorting = ' . (int) $tags[$valueId]['tag_value_sorting'] . '
-                        WHERE att_id=?
-                        AND item_id=?
-                        AND value_id=?'
-                    )
-                    ->execute($this->get('id'), $itemId, $valueId);
+                $query
+                    ->setParameter('sorting', (int) $tags[$valueId]['tag_value_sorting'])
+                    ->setParameter('valueId', $valueId)
+                    ->execute();
             }
         }
 
@@ -502,42 +470,55 @@ abstract class AbstractTags extends BaseComplex
             return;
         }
 
-        $database = $this->getDatabase();
-        $itemIds  = \array_keys($arrValues);
+        $itemIds = \array_keys($arrValues);
         \sort($itemIds);
 
         // Load all existing tags for all items to be updated, keep the ordering to item Id
         // so we can benefit from the batch deletion and insert algorithm.
-        $existingTagIds = $database
-            ->prepare(
-                \sprintf(
-                    'SELECT * FROM %1$s
-                    WHERE att_id=?
-                    AND item_id IN (%2$s)
-                    ORDER BY item_id ASC',
-                    'tl_metamodel_tag_relation',
-                    \implode(',', \array_fill(0, \count($itemIds), '?'))
-                )
-            )
-            ->execute(\array_merge([$this->get('id')], $itemIds));
+        $existingTagQuery = $this
+            ->connection
+            ->createQueryBuilder()
+            ->select('*')
+            ->from('tl_metamodel_tag_relation')
+            ->where('att_id=:attId')->setParameter('attId', $this->get('id'))
+            ->andWhere('item_id IN (:valueIds)')->setParameter('valueIds', $itemIds, Connection::PARAM_STR_ARRAY)
+            ->orderBy('item_id', 'ASC')
+            ->execute();
+
+        $existingTagIds = [];
+        while ($tag = $existingTagQuery->fetch(\PDO::FETCH_ASSOC)) {
+            $existingTagIds[$tag['item_id']][] = $tag['value_id'];
+        }
 
         // Now loop over all items and update the values for them.
         // NOTE: we can not loop over the original array, as the item ids are not neccessarily
         // sorted ascending by item id.
         $insertValues = [];
         foreach ($itemIds as $itemId) {
-            $insertValues = \array_merge(
-                $insertValues,
-                $this->setDataForItem($itemId, $arrValues[$itemId], $existingTagIds)
-            );
+            $insertValues[] = $this->setDataForItem($itemId, $arrValues[$itemId], ($existingTagIds[$itemId] ?? []));
         }
+        $insertValues = \array_merge(...$insertValues);
 
-        if ($insertValues) {
-            $database->execute(
-                'INSERT INTO tl_metamodel_tag_relation
-                (att_id, item_id, value_sorting, value_id)
-                VALUES ' . \implode(',', $insertValues)
-            );
+        if ([] !== $insertValues) {
+            $builder = $this
+                ->connection
+                ->createQueryBuilder()
+                    ->insert('tl_metamodel_tag_relation')
+                    ->values([
+                        'att_id'        => ':attId',
+                        'item_id'       => ':itemId',
+                        'value_sorting' => ':sorting',
+                        'value_id'      => ':valueId',
+                    ]);
+
+            foreach ($insertValues as $value) {
+                $builder
+                    ->setParameter('attId', $value['attId'])
+                    ->setParameter('itemId', $value['itemId'])
+                    ->setParameter('sorting', $value['sorting'])
+                    ->setParameter('valueId', $value['valueId'])
+                    ->execute();
+            }
         }
     }
 

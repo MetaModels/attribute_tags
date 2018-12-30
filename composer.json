@@ -31,19 +31,19 @@
     "irc": "irc://irc.freenode.org/contao.mm",
     "source": "https://github.com/MetaModels/attribute_tags"
   },
-    "require": {
-        "php": "^5.6 || ^7.0",
-        "contao/core-bundle": "^4.4",
-        "contao-community-alliance/dc-general": "^2.1@dev",
-        "metamodels/core": "^2.1@dev",
-        "symfony/dependency-injection": "^3.3 || ^4.0",
-        "symfony/http-kernel": "^3.3 || ^4.0"
-    },
-    "require-dev": {
-        "cyberspectrum/contao-toolbox": "^0.7",
-        "phpcq/all-tasks": "^1.2",
-        "contao/manager-plugin": "^2.1"
-    },
+  "require": {
+    "php": "^5.6 || ^7.0",
+    "contao-community-alliance/dc-general": "^2.1@dev",
+    "contao/core-bundle": "^4.4",
+    "metamodels/core": "^2.1@dev",
+    "symfony/dependency-injection": "^3.3 || ^4.0",
+    "symfony/http-kernel": "^3.3 || ^4.0"
+  },
+  "require-dev": {
+    "contao/manager-plugin": "^2.1",
+    "cyberspectrum/contao-toolbox": "^0.7",
+    "phpcq/all-tasks": "^1.2"
+  },
   "conflict": {
     "contao/core": "3.4.0"
   },
@@ -62,18 +62,13 @@
   },
   "extra": {
     "contao-manager-plugin": "MetaModels\\AttributeTagsBundle\\ContaoManager\\Plugin",
-    "contao": {
-      "transifex": {
-        "project": "metamodels",
-        "prefix": "attribute_tags-",
-        "languages_cto": "src/Resources/contao/languages",
-        "languages_tx": ".tx"
-      }
-    },
     "branch-alias": {
       "dev-master": "2.0.x-dev",
       "dev-feature/contao4": "2.1.x-dev"
     }
+  },
+  "config": {
+    "sort-packages": true
   },
   "repositories": [
     {

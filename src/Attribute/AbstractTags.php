@@ -10,8 +10,7 @@
  *
  * This project is provided in good faith and hope to be usable by anyone.
  *
- * @package    MetaModels
- * @subpackage AttributeTags
+ * @package    MetaModels/attribute_tags
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Christopher Boelter <christopher@boelter.eu>
@@ -306,6 +305,21 @@ abstract class AbstractTags extends BaseComplex
     }
 
     /**
+     * Get the picker input type.
+     *
+     * @return string
+     */
+    private function getPickerType()
+    {
+        $sourceName = $this->getTagSource();
+        if (!\in_array($sourceName, ['tl_page', 'tl_files'])) {
+            return 'DcGeneralTreePicker';
+        }
+
+        return $sourceName === 'tl_page' ? 'pageTree' : 'fileTree';
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getFieldDefinition($arrOverrides = [])
@@ -313,7 +327,7 @@ abstract class AbstractTags extends BaseComplex
         $arrFieldDef      = parent::getFieldDefinition($arrOverrides);
         $this->widgetMode = $arrOverrides['tag_as_wizard'];
         if ($this->isTreePicker()) {
-            $arrFieldDef['inputType']                   = 'DcGeneralTreePicker';
+            $arrFieldDef['inputType']                   = $this->getPickerType();
             $arrFieldDef['eval']['sourceName']          = $this->getTagSource();
             $arrFieldDef['eval']['fieldType']           = 'checkbox';
             $arrFieldDef['eval']['idProperty']          = $this->getAliasColumn();

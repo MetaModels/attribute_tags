@@ -69,11 +69,5 @@
   },
   "config": {
     "sort-packages": true
-  },
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "git@gitlab.com:metamodels/core.git"
-    }
-  ]
+  }
 }

@@ -41,7 +41,8 @@
   },
   "require-dev": {
     "contao/manager-plugin": "^2.1",
-    "cyberspectrum/contao-toolbox": "^0.7",
+    "discordier/justtextwidgets": "^1.2.0@alpha",
+    "menatwork/contao-multicolumnwizard-bundle": "^3.4.0@beta",
     "phpcq/all-tasks": "^1.2"
   },
   "conflict": {

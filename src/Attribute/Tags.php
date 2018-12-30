@@ -48,13 +48,21 @@ class Tags extends AbstractTags
      */
     public function valueToWidget($varValue)
     {
+        if (empty($varValue)) {
+            return null;
+        }
+
         $strColNameAlias = $this->getAliasColumn();
 
         $arrResult = array();
-        if ($varValue) {
-            foreach ($varValue as $arrValue) {
-                $arrResult[] = $arrValue[$strColNameAlias];
+        foreach ($varValue as $arrValue) {
+            if (!is_array($arrValue) || !array_key_exists($strColNameAlias, $arrValue)) {
+                continue;
             }
+            $arrResult[] = $arrValue[$strColNameAlias];
+        }
+        if (empty($arrResult)) {
+            return null;
         }
 
         // We must use string keys.

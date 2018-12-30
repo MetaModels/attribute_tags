@@ -227,12 +227,6 @@ class MetaModelTags extends AbstractTags
                 \array_diff($idList, $itemIds)
             );
         }
-        // Flip to have id as key and index on value.
-        $orderIds = \array_flip($idList);
-        // Loop over items and set $id => $id
-        foreach ($itemIds as $itemId) {
-            $orderIds[$itemId] = $itemId;
-        }
         // Use new order and add non existent ids to the end.
         return $sorting[$cacheKey] = \array_merge($itemIds, \array_diff($idList, $itemIds));
     }
@@ -242,17 +236,16 @@ class MetaModelTags extends AbstractTags
      */
     public function valueToWidget($varValue)
     {
-        // If we have a tree picker, the value must be a comma separated string.
         if (empty($varValue)) {
-            return [];
+            return null;
         }
 
         $aliasColumn    = $this->getAliasColumn();
         $aliasTranslate = function ($value) use ($aliasColumn) {
-            if (!empty($value[$aliasColumn])) {
+            if (array_key_exists($aliasColumn, $value)) {
                 return $value[$aliasColumn];
             }
-            if (!empty($value[self::TAGS_RAW][$aliasColumn])) {
+            if (array_key_exists(self::TAGS_RAW, $value) && array_key_exists($aliasColumn, $value[self::TAGS_RAW])) {
                 return $value[self::TAGS_RAW][$aliasColumn];
             }
 
@@ -261,7 +254,10 @@ class MetaModelTags extends AbstractTags
 
         $alias = [];
         foreach ($varValue as $valueId => $value) {
-            $alias[$valueId] = $aliasTranslate($value);
+            if (null === $translated = $aliasTranslate($value)) {
+                continue;
+            }
+            $alias[$valueId] = $translated;
         }
         unset($valueId, $value);
 
@@ -269,7 +265,14 @@ class MetaModelTags extends AbstractTags
         $sortedIds = $this->sortIdsBySortingColumn(\array_keys($varValue));
         $result    = [];
         foreach ($sortedIds as $id) {
+            if (!array_key_exists($id, $alias)) {
+                continue;
+            }
             $result[] = $alias[$id];
+        }
+
+        if (empty($result)) {
+            return null;
         }
 
         // We must use string keys.
@@ -283,12 +286,12 @@ class MetaModelTags extends AbstractTags
      */
     protected function getValuesFromWidget($varValue)
     {
-        $model     = $this->getTagMetaModel();
-        $alias     = $this->getAliasColumn();
-        $attribute = $model->getAttribute($alias);
-        $valueIds  = [];
+        $model    = $this->getTagMetaModel();
+        $alias    = $this->getAliasColumn();
+        $valueIds = [];
 
-        if ($attribute) {
+        if ($model->hasAttribute($alias)) {
+            $attribute = $model->getAttribute($alias);
             // It is an attribute, we may search for it.
             foreach ($varValue as $value) {
                 if ($attribute instanceof ITranslated) {
@@ -310,25 +313,20 @@ class MetaModelTags extends AbstractTags
             }
         } else {
             // Must be a system column then.
-            // Special case first, the id is our alias, easy way out.
-            if ($alias === 'id') {
-                $valueIds = $varValue;
-            } else {
-                // Translate the alias values to the item ids.
-                $result = $this
-                    ->getConnection()
-                    ->createQueryBuilder()
-                    ->select('id')
-                    ->from($model->getTableName())
-                    ->where($alias . 'IN (:values)')
-                    ->setParameter('values', $varValue, Connection::PARAM_STR_ARRAY)
-                    ->execute();
+            // Translate the alias values to the item ids.
+            $result = $this
+                ->getConnection()
+                ->createQueryBuilder()
+                ->select('id')
+                ->from($this->getTagSource())
+                ->where($alias . ' IN (:values)')
+                ->setParameter('values', $varValue, Connection::PARAM_STR_ARRAY)
+                ->execute();
 
-                $valueIds = $result->fetchAll(\PDO::FETCH_COLUMN);
+            $valueIds = $result->fetchAll(\PDO::FETCH_COLUMN);
 
-                if (empty($valueIds)) {
-                    throw new \RuntimeException('Could not translate value ' . \var_export($varValue, true));
-                }
+            if (empty($valueIds)) {
+                throw new \RuntimeException('Could not translate value ' . \var_export($varValue, true));
             }
         }
 

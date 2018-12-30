@@ -50,19 +50,16 @@ class TagsTest extends TestCase
         $metaModel = $this->getMockForAbstractClass(IMetaModel::class);
 
         $metaModel
-            ->expects($this->any())
             ->method('getTableName')
-            ->will($this->returnValue($tableName));
+            ->willReturn($tableName);
 
         $metaModel
-            ->expects($this->any())
             ->method('getActiveLanguage')
-            ->will($this->returnValue($language));
+            ->willReturn($language);
 
         $metaModel
-            ->expects($this->any())
             ->method('getFallbackLanguage')
-            ->will($this->returnValue($fallbackLanguage));
+            ->willReturn($fallbackLanguage);
 
         return $metaModel;
     }
@@ -77,7 +74,7 @@ class TagsTest extends TestCase
         $text = new Tags(
             $this->mockMetaModel('mm_unittest', 'en', 'en'),
             [],
-            $this->getMockBuilder(Connection::class)->disableOriginalConstructor()->getMock()
+            $this->mockConnection()
         );
         $this->assertInstanceOf(Tags::class, $text);
     }
@@ -92,7 +89,7 @@ class TagsTest extends TestCase
         $text = new MetaModelTags(
             $this->mockMetaModel('mm_unittest', 'en', 'en'),
             [],
-            $this->getMockBuilder(Connection::class)->disableOriginalConstructor()->getMock(),
+            $this->mockConnection(),
             $this->getMockForAbstractClass(IFactory::class),
             $this->getMockForAbstractClass(IFilterSettingFactory::class)
 
@@ -113,7 +110,7 @@ class TagsTest extends TestCase
                 'colname' => 'tags',
                 'tag_alias' => 'alias'
             ],
-            $this->getMockBuilder(Connection::class)->disableOriginalConstructor()->getMock()
+            $this->mockConnection()
         );
 
         // Trick attribute into thinking we have a backend running and enable tree picker.
@@ -127,5 +124,77 @@ class TagsTest extends TestCase
 
         // It should return the ids instead of the alias.
         $this->assertSame(['1','2'], $result);
+    }
+
+    /**
+     * Data provider.
+     *
+     * @return array
+     */
+    public function valueToWidgetProvider(): array
+    {
+        return [
+            'null returns null' => [
+                'expected'    => null,
+                'value'       => null,
+                'attr_config' => ['id' => uniqid('', false)],
+            ],
+            'empty array returns null' => [
+                'expected'    => null,
+                'value'       => [],
+                'attr_config' => ['id' => uniqid('', false)],
+            ],
+            'empty string returns empty string' => [
+                'expected'    => [''],
+                'value'       => [['id' => '']],
+                'attr_config' => ['id' => uniqid('', false)],
+            ],
+            'value without row value null' => [
+                'expected'    => null,
+                'value'       => [['foo' => 'bar']],
+                'attr_config' => ['id' => uniqid('', false)],
+            ],
+            'numeric id is returned' => [
+                'expected'    => ['10'],
+                'value'       => [['id' => 10]],
+                'attr_config' => ['id' => uniqid('', false)],
+            ],
+        ];
+    }
+
+    /**
+     * Test the value to widget method.
+     *
+     * @param mixed $expected   The expected value.
+     * @param mixed $value      The input value (native value).
+     * @param array $attrConfig The attribute config.
+     *
+     * @return void
+     *
+     * @dataProvider valueToWidgetProvider
+     */
+    public function testValueToWidget($expected, $value, $attrConfig): void
+    {
+        $connection = $this->mockConnection();
+
+        $tags = new Tags(
+            $this->mockMetaModel('mm_unittest', 'en', 'en'),
+            $attrConfig,
+            $connection
+        );
+
+        $this->assertSame($expected, $tags->valueToWidget($value));
+    }
+
+    /**
+     * Mock the database connection.
+     *
+     * @return \PHPUnit_Framework_MockObject_MockObject|Connection
+     */
+    private function mockConnection()
+    {
+        return $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 }

@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2018 The MetaModels team.
+ * (c) 2012-2019 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,15 +16,15 @@
  * @author     Stefan Heimes <cms@men-at-work.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2018 The MetaModels team.
+ * @copyright  2012-2019 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
 
 // Fields.
-$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard'][0] = 'Display as checkbox wizard';
+$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard'][0] = 'Select the widget type';
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard'][1] =
-    'Select this options to change the display type from "checkbox" to a "checkboxwizard".';
+    'Select the desired widget type.';
 
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_minLevel'][0] = 'Minimum level in tree picker';
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_minLevel'][1] =

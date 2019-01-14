@@ -297,6 +297,7 @@ abstract class AbstractTags extends BaseComplex
 
         $arrFieldDef['eval']['includeBlankOption'] = true;
         $arrFieldDef['eval']['multiple']           = true;
+        $arrFieldDef['empty_value']                = null;
 
         return $arrFieldDef;
     }

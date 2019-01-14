@@ -240,27 +240,7 @@ class MetaModelTags extends AbstractTags
             return null;
         }
 
-        $aliasColumn    = $this->getAliasColumn();
-        $aliasTranslate = function ($value) use ($aliasColumn) {
-            if (array_key_exists($aliasColumn, $value)) {
-                return $value[$aliasColumn];
-            }
-            if (array_key_exists(self::TAGS_RAW, $value) && array_key_exists($aliasColumn, $value[self::TAGS_RAW])) {
-                return $value[self::TAGS_RAW][$aliasColumn];
-            }
-
-            return null;
-        };
-
-        $alias = [];
-        foreach ($varValue as $valueId => $value) {
-            if (null === $translated = $aliasTranslate($value)) {
-                continue;
-            }
-            $alias[$valueId] = $translated;
-        }
-        unset($valueId, $value);
-
+        $alias = $this->convertValuesToIds($varValue);
         // Sort the values now.
         $sortedIds = $this->sortIdsBySortingColumn(\array_keys($varValue));
         $result    = [];
@@ -277,6 +257,30 @@ class MetaModelTags extends AbstractTags
 
         // We must use string keys.
         return \array_map('strval', $result);
+    }
+
+    /**
+     * Convert the passed values to a value id list.
+     *
+     * @param array $varValue The values to convert.
+     *
+     * @return array
+     */
+    private function convertValuesToIds($varValue): array
+    {
+        $aliasColumn = $this->getAliasColumn();
+        $alias       = [];
+        foreach ($varValue as $valueId => $value) {
+            if (array_key_exists($aliasColumn, $value)) {
+                $alias[$valueId] = $value[$aliasColumn];
+                continue;
+            }
+            if (array_key_exists(self::TAGS_RAW, $value) && array_key_exists($aliasColumn, $value[self::TAGS_RAW])) {
+                $alias[$valueId] = $value[self::TAGS_RAW][$aliasColumn];
+            }
+        }
+
+        return $alias;
     }
 
     /**

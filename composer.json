@@ -41,12 +41,8 @@
   },
   "require-dev": {
     "contao/manager-plugin": "^2.1",
-    "discordier/justtextwidgets": "^1.2.0@alpha",
     "menatwork/contao-multicolumnwizard-bundle": "^3.4.0@beta",
     "phpcq/all-tasks": "^1.2"
-  },
-  "conflict": {
-    "contao/core": "3.4.0"
   },
   "autoload": {
     "psr-4": {

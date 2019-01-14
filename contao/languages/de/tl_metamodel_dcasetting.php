@@ -1,18 +1,28 @@
 <?php
 /**
- * Translations are managed using Transifex. To create a new translation
+ * This file is part of MetaModels/attribute_tags.
+ *
+ * (c) 2012-2019 The MetaModels team.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * This project is provided in good faith and hope to be usable by anyone.
+ *
+ * Translations are managed automatically using Transifex. To create a new translation
  * or to help to maintain an existing one, please register at transifex.com.
  *
- * @link http://help.transifex.com/intro/translating.html
- * @link https://www.transifex.com/projects/p/metamodels/language/de/
+ * Last-updated: 2019-01-14T14:15:55+01:00
  *
- * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
- *
- * last-updated: 2015-09-18T10:31:00+02:00
+ * @copyright 2012-2019 The MetaModels team.
+ * @license   https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
+ * @link      https://www.transifex.com/metamodels/public/
+ * @link      https://www.transifex.com/signup/?join_project=metamodels
  */
 
-$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard']['0']           = 'Als Checkbox-Wizard anzeigen';
-$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard']['1']           = 'Wählen Sie diese Option aus um die Anzeige von "Checkbox" auf "Checkbox-Wizard" umzustellen.';
+
+$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard']['0']           = 'Anzeigetyp wählen';
+$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard']['1']           = 'Wählen Sie einen gewünschten Anzeigetyp. ';
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference']['0'] = 'Anzeige des Checkboxmenü
 ';
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference']['1'] = 'Als Checkbox-Wizard anzeigen';

@@ -1,18 +1,26 @@
 <?php
 /**
- * Translations are managed using Transifex. To create a new translation
+ * This file is part of MetaModels/attribute_tags.
+ *
+ * (c) 2012-2019 The MetaModels team.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * This project is provided in good faith and hope to be usable by anyone.
+ *
+ * Translations are managed automatically using Transifex. To create a new translation
  * or to help to maintain an existing one, please register at transifex.com.
  *
- * @link http://help.transifex.com/intro/translating.html
- * @link https://www.transifex.com/projects/p/metamodels/language/ru/
+ * Last-updated: 2019-01-14T14:15:55+01:00
  *
- * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
- *
- * last-updated: 2015-07-13T16:14:13+02:00
+ * @copyright 2012-2019 The MetaModels team.
+ * @license   https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
+ * @link      https://www.transifex.com/metamodels/public/
+ * @link      https://www.transifex.com/signup/?join_project=metamodels
  */
 
-$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard']['0']           = 'Показать как мастер чекбоксов';
-$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard']['1']           = 'Выберите этот параметр для изменения типа вывода с «чекбокс» на «мастер чекбоксов».';
+
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference']['0'] = 'Показать чекбокс меню';
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference']['1'] = 'Показать как мастер чекбоксов';
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference']['2'] = 'Показать как всплывающее окно выбора';

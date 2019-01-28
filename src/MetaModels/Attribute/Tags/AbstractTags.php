@@ -313,16 +313,17 @@ abstract class AbstractTags extends BaseComplex
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \InvalidArgumentException When the passed value is not an array or null.
      */
     public function widgetToValue($varValue, $itemId)
     {
-        // If we are in tree mode, we got a comma separate list.
-        if ($this->isTreePicker() && !empty($varValue) && !\is_array($varValue)) {
-            $varValue = \explode(',', $varValue);
+        if (null === $varValue || [] === $varValue) {
+            return null;
         }
 
-        if ((!\is_array($varValue)) || empty($varValue)) {
-            return [];
+        if ((!\is_array($varValue))) {
+            throw new \InvalidArgumentException('Value must be an array or null');
         }
 
         return $this->getValuesFromWidget($varValue);

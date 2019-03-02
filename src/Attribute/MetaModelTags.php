@@ -325,6 +325,7 @@ class MetaModelTags extends AbstractTags
                 ->from($this->getTagSource())
                 ->where($alias . ' IN (:values)')
                 ->setParameter('values', $varValue, Connection::PARAM_STR_ARRAY)
+                ->orderBy('FIELD(' . $alias . ',:values)')
                 ->execute();
 
             $valueIds = $result->fetchAll(\PDO::FETCH_COLUMN);

@@ -29,6 +29,7 @@ namespace MetaModels\AttributeTagsBundle\FilterRule;
 
 use MetaModels\AttributeTagsBundle\Attribute\AbstractTags;
 use MetaModels\AttributeTagsBundle\Attribute\MetaModelTags;
+use MetaModels\AttributeTagsBundle\Attribute\Tags;
 use MetaModels\Filter\FilterRule;
 use MetaModels\IMetaModel;
 
@@ -40,7 +41,7 @@ class FilterRuleTags extends FilterRule
     /**
      * The attribute to filter.
      *
-     * @var AbstractTags
+     * @var AbstractTags|Tags|MetaModelTags
      */
     protected $objAttribute;
 
@@ -76,12 +77,7 @@ class FilterRuleTags extends FilterRule
     protected function getTagMetaModel()
     {
         if (empty($this->objSelectMetaModel)) {
-            $this->objSelectMetaModel = $this
-                ->objAttribute
-                ->getMetaModel()
-                ->getServiceContainer()
-                ->getFactory()
-                ->getMetaModel($this->objAttribute->get('tag_table'));
+            $this->objSelectMetaModel = $this->objAttribute->getTagMetaModel();
         }
 
         return $this->objSelectMetaModel;

@@ -107,7 +107,7 @@ class MetaModelTags extends AbstractTags
      *
      * @return IMetaModel
      */
-    protected function getTagMetaModel()
+    public function getTagMetaModel()
     {
         if (empty($this->objSelectMetaModel)) {
             $this->objSelectMetaModel = $this->factory->getMetaModel($this->getTagSource());

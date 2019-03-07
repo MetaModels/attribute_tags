@@ -200,7 +200,7 @@ class MetaModelTags extends AbstractTags
     {
         // If we have a tree picker, the value must be a comma separated string.
         if (empty($varValue)) {
-            return [];
+            return null;
         }
 
         $aliasColumn    = $this->getAliasColumn();

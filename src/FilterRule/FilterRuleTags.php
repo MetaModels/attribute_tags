@@ -27,6 +27,8 @@
 
 namespace MetaModels\AttributeTagsBundle\FilterRule;
 
+use Contao\System;
+use Doctrine\DBAL\Connection;
 use MetaModels\AttributeTagsBundle\Attribute\AbstractTags;
 use MetaModels\AttributeTagsBundle\Attribute\MetaModelTags;
 use MetaModels\AttributeTagsBundle\Attribute\Tags;
@@ -60,6 +62,13 @@ class FilterRuleTags extends FilterRule
     protected $objSelectMetaModel;
 
     /**
+     * The database connection.
+     *
+     * @var Connection
+     */
+    private $connection;
+
+    /**
      * Check if the reference is a MetaModel.
      *
      * @return bool
@@ -86,12 +95,24 @@ class FilterRuleTags extends FilterRule
     /**
      * {@inheritDoc}
      */
-    public function __construct(AbstractTags $objAttribute, $strValue)
+    public function __construct(AbstractTags $objAttribute, $strValue, Connection $connection = null)
     {
         parent::__construct();
 
         $this->objAttribute = $objAttribute;
         $this->value        = $strValue;
+
+        if (null === $connection) {
+            // @codingStandardsIgnoreStart
+            @trigger_error(
+                'Connection is missing. It has to be passed in the constructor. Fallback will be dropped.',
+                E_USER_DEPRECATED
+            );
+            // @codingStandardsIgnoreEnd
+            $connection = System::getContainer()->get('database_connection');
+        }
+
+        $this->connection = $connection;
     }
 
     /**
@@ -107,27 +128,15 @@ class FilterRuleTags extends FilterRule
 
         if (!$this->isMetaModel()) {
             if ($strColNameAlias) {
-                $strTableNameId = $this->objAttribute->get('tag_table');
-                $objDB          = $this->objAttribute->getMetaModel()->getServiceContainer()->getDatabase();
-                $objSelectIds   = $objDB
-                    ->prepare(
-                        \sprintf(
-                            'SELECT %1$s FROM %2$s WHERE %3$s',
-                            $strColNameId,
-                            $strTableNameId,
-                            \implode(' OR ', \array_fill(0, \count($arrValues), $strColNameAlias . ' LIKE ?'))
-                        )
-                    )
-                    ->execute(
-                        \array_map(
-                            function ($value) {
-                                return \str_replace(['*', '?'], ['%', '_'], $value);
-                            },
-                            $arrValues
-                        )
-                    );
-
-                $arrValues = $objSelectIds->fetchEach($strColNameId);
+                $builder = $this->connection->createQueryBuilder()
+                    ->select($strColNameId)
+                    ->from($this->objAttribute->get('tag_table'));
+                foreach ($arrValues as $index => $value) {
+                    $builder
+                        ->orWhere($strColNameAlias . ' LIKE :value_' . $index)
+                        ->setParameter('value_' . $index, $value);
+                }
+                $arrValues = $builder->execute()->fetchAll(\PDO::FETCH_COLUMN);
             } else {
                 $arrValues = \array_map('intval', $arrValues);
             }
@@ -161,20 +170,16 @@ class FilterRuleTags extends FilterRule
             return [];
         }
 
-        $objMatches = $this
-            ->objAttribute
-            ->getMetaModel()
-            ->getServiceContainer()
-            ->getDatabase()
-            ->prepare(
-                'SELECT item_id as id
-                FROM tl_metamodel_tag_relation
-                WHERE value_id IN (' . \implode(',', $arrValues) . ')
-                AND att_id = ?'
-            )
-            ->execute($this->objAttribute->get('id'));
-
-        return $objMatches->fetchEach('id');
+        return $this->connection
+            ->createQueryBuilder()
+            ->select('item_id')
+            ->from('tl_metamodel_tag_relation')
+            ->where('att_id=:att_id')
+            ->setParameter('att_id', $this->objAttribute->get('id'))
+            ->andWhere('value_id IN (:values)')
+            ->setParameter('values', $arrValues, Connection::PARAM_STR_ARRAY)
+            ->execute()
+            ->fetchAll(\PDO::FETCH_COLUMN);
     }
 
     /**

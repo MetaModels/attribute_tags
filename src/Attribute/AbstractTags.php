@@ -385,7 +385,7 @@ abstract class AbstractTags extends BaseComplex
      */
     public function searchFor($strPattern)
     {
-        $objFilterRule = new FilterRuleTags($this, $strPattern);
+        $objFilterRule = new FilterRuleTags($this, $strPattern, $this->connection);
         return $objFilterRule->getMatchingIds();
     }
 

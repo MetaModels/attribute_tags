@@ -48,6 +48,10 @@ class Tags extends AbstractTags
      */
     public function valueToWidget($varValue)
     {
+        if (empty($varValue)) {
+            return null;
+        }
+
         $strColNameAlias = $this->getAliasColumn();
 
         $arrResult = [];

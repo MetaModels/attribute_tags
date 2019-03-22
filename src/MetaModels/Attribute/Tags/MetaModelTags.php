@@ -346,15 +346,17 @@ class MetaModelTags extends AbstractTags
             return [];
         }
 
+        if ([] === $idList) {
+            return [];
+        }
+
         $filter = $this->getTagMetaModel()->getEmptyFilter();
 
         $this->buildFilterRulesForFilterSetting($filter);
 
-        // Add some more filter rules.
-        if ($usedOnly) {
+        // If used only or id list given, select only the options that are assigned or assigned to only these items.
+        if ($usedOnly || \is_array($idList)) {
             $this->buildFilterRulesForUsedOnly($filter, $idList ? $idList : []);
-        } elseif ($idList && \is_array($idList)) {
-            $filter->addFilterRule(new StaticIdList($idList));
         }
 
         $objItems = $this->getTagMetaModel()->findByFilter(

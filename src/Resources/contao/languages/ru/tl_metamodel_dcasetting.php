@@ -12,7 +12,7 @@
  * Translations are managed automatically using Transifex. To create a new translation
  * or to help to maintain an existing one, please register at transifex.com.
  *
- * Last-updated: 2019-01-14T14:15:55+01:00
+ * Last-updated: 2019-03-29T12:34:41+01:00
  *
  * @copyright 2012-2019 The MetaModels team.
  * @license   https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
@@ -21,6 +21,8 @@
  */
 
 
+$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard']['0']           = 'Выберите тип виджета';
+$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard']['1']           = 'Выберите нужный тип виджета.';
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference']['0'] = 'Показать чекбокс меню';
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference']['1'] = 'Показать как мастер чекбоксов';
 $GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference']['2'] = 'Показать как всплывающее окно выбора';

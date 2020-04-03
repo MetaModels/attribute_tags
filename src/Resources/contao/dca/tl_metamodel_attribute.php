@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2020 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -18,7 +18,7 @@
  * @author     David Maack <david.maack@arcor.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2020 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -66,7 +66,6 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_column'] = [
         'mandatory'          => true,
         'doNotSaveEmpty'     => true,
         'alwaysSave'         => true,
-        'submitOnChange'     => true,
         'tl_class'           => 'w50',
         'chosen'             => 'true'
     ],
@@ -82,7 +81,6 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_id'] = [
         'mandatory'          => true,
         'doNotSaveEmpty'     => true,
         'alwaysSave'         => true,
-        'submitOnChange'     => true,
         'tl_class'           => 'w50',
         'chosen'             => 'true'
     ],
@@ -98,7 +96,6 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_alias'] = [
         'mandatory'          => true,
         'doNotSaveEmpty'     => true,
         'alwaysSave'         => true,
-        'submitOnChange'     => true,
         'tl_class'           => 'w50',
         'chosen'             => 'true'
     ],
@@ -114,7 +111,6 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_sorting'] = [
         'mandatory'          => true,
         'doNotSaveEmpty'     => true,
         'alwaysSave'         => true,
-        'submitOnChange'     => true,
         'tl_class'           => 'w50 clr',
         'chosen'             => 'true'
     ],
@@ -141,7 +137,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['tag_filter'] = [
         'includeBlankOption' => true,
         'alwaysSave'         => true,
         'submitOnChange'     => true,
-        'tl_class'           => 'w50',
+        'tl_class'           => 'clr w50',
         'chosen'             => 'true'
     ],
     'sql'       => 'int(11) unsigned NOT NULL default \'0\''

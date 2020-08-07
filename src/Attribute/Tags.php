@@ -81,11 +81,11 @@ class Tags extends AbstractTags
         $values = $this
             ->getConnection()
             ->createQueryBuilder()
-            ->select('v.*')
-            ->from($this->getTagSource(), 'v')
-            ->where('v.' . $alias . ' IN (:aliases)')
+            ->select('t.*')
+            ->from($this->getTagSource(), 't')
+            ->where('t.' . $alias . ' IN (:aliases)')
             ->setParameter('aliases', $varValue, Connection::PARAM_STR_ARRAY)
-            ->orderBy('v.' . $this->getSortingColumn())
+            ->orderBy('t.' . $this->getSortingColumn())
             ->execute();
 
         $result = [];

@@ -321,11 +321,11 @@ class MetaModelTags extends AbstractTags
             $result = $this
                 ->getConnection()
                 ->createQueryBuilder()
-                ->select('id')
-                ->from($this->getTagSource())
-                ->where($alias . ' IN (:values)')
+                ->select('t.id')
+                ->from($this->getTagSource(), 't')
+                ->where('t.' . $alias . ' IN (:values)')
                 ->setParameter('values', $varValue, Connection::PARAM_STR_ARRAY)
-                ->orderBy('FIELD(' . $alias . ',:values)')
+                ->orderBy('FIELD(t.' . $alias . ',:values)')
                 ->execute();
 
             $valueIds = $result->fetchAll(\PDO::FETCH_COLUMN);
@@ -357,12 +357,12 @@ class MetaModelTags extends AbstractTags
         $builder = $this
             ->getConnection()
             ->createQueryBuilder()
-            ->select('value_id')
-            ->addSelect('COUNT(item_id) AS amount')
-            ->from('tl_metamodel_tag_relation')
-            ->where('att_id=:attId')
+            ->select('t.value_id')
+            ->addSelect('COUNT(t.item_id) AS amount')
+            ->from('tl_metamodel_tag_relation', 't')
+            ->where('t.att_id=:attId')
             ->setParameter('attId', $this->get('id'))
-            ->groupBy('value_id');
+            ->groupBy('t.value_id');
 
         if (0 < $items->getCount()) {
             $ids = [];
@@ -370,11 +370,11 @@ class MetaModelTags extends AbstractTags
                 $ids[] = $item->get('id');
             }
             $builder
-                ->andWhere('value_id IN (:valueIds)')
+                ->andWhere('t.value_id IN (:valueIds)')
                 ->setParameter('valueIds', $ids, Connection::PARAM_STR_ARRAY);
             if ($idList && \is_array($idList)) {
                 $builder
-                    ->andWhere('item_id IN (:itemIds)')
+                    ->andWhere('t.item_id IN (:itemIds)')
                     ->setParameter('itemIds', $idList, Connection::PARAM_STR_ARRAY);
             }
         }
@@ -496,15 +496,15 @@ class MetaModelTags extends AbstractTags
         $result = $this
             ->getConnection()
             ->createQueryBuilder()
-            ->select('value_id AS id')
-            ->from('tl_metamodel_tag_relation')
-            ->where('att_id=:attId')
-            ->groupBy('value_id')
+            ->select('t.value_id AS id')
+            ->from('tl_metamodel_tag_relation', 't')
+            ->where('t.att_id=:attId')
+            ->groupBy('t.value_id')
             ->setParameter('attId', $this->get('id'));
 
         if (!empty($idList)) {
             $result
-                ->andWhere('item_id IN (:itemIds)')
+                ->andWhere('t.item_id IN (:itemIds)')
                 ->setParameter('itemIds', $idList, Connection::PARAM_STR_ARRAY);
         }
 
@@ -562,14 +562,14 @@ class MetaModelTags extends AbstractTags
         $rows = $this
             ->getConnection()
             ->createQueryBuilder()
-            ->select('item_id AS id')
-            ->addSelect('value_id AS value')
-            ->from('tl_metamodel_tag_relation')
-            ->where('item_id IN (:itemIds)')
+            ->select('t.item_id AS id')
+            ->addSelect('t.value_id AS value')
+            ->from('tl_metamodel_tag_relation', 't')
+            ->where('t.item_id IN (:itemIds)')
             ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
-            ->andWhere('att_id=:attId')
+            ->andWhere('t.att_id=:attId')
             ->setParameter('attId', $this->get('id'))
-            ->orderBy('value_sorting')
+            ->orderBy('t.value_sorting')
             ->execute()
             ->fetchAll(\PDO::FETCH_ASSOC);
 

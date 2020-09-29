@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2020 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,7 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2020 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -411,10 +411,10 @@ abstract class AbstractTags extends BaseComplex
         if ($valuesToRemove) {
             $this->connection
                 ->createQueryBuilder()
-                ->delete('tl_metamodel_tag_relation', 't')
-                ->where('t.att_id=:attId')
-                ->andWhere('t.item_id=:itemId')
-                ->andWhere('t.value_id IN (:valueIds)')
+                ->delete('tl_metamodel_tag_relation')
+                ->where('tl_metamodel_tag_relation.att_id=:attId')
+                ->andWhere('tl_metamodel_tag_relation.item_id=:itemId')
+                ->andWhere('tl_metamodel_tag_relation.value_id IN (:valueIds)')
                 ->setParameter('attId', $this->get('id'))
                 ->setParameter('itemId', $itemId)
                 ->setParameter('valueIds', $valuesToRemove, Connection::PARAM_STR_ARRAY)
@@ -504,12 +504,12 @@ abstract class AbstractTags extends BaseComplex
             $builder = $this
                 ->connection
                 ->createQueryBuilder()
-                    ->insert('tl_metamodel_tag_relation', 't')
+                    ->insert('tl_metamodel_tag_relation')
                     ->values([
-                        't.att_id'        => ':attId',
-                        't.item_id'       => ':itemId',
-                        't.value_sorting' => ':sorting',
-                        't.value_id'      => ':valueId',
+                        'tl_metamodel_tag_relation.att_id'        => ':attId',
+                        'tl_metamodel_tag_relation.item_id'       => ':itemId',
+                        'tl_metamodel_tag_relation.value_sorting' => ':sorting',
+                        'tl_metamodel_tag_relation.value_id'      => ':valueId',
                     ]);
 
             foreach ($insertValues as $value) {
@@ -542,9 +542,9 @@ abstract class AbstractTags extends BaseComplex
 
         $this->connection
             ->createQueryBuilder()
-            ->delete('tl_metamodel_tag_relation', 't')
-            ->where('t.att_id=:attId')
-            ->andWhere('t.item_id IN (:itemIds)')
+            ->delete('tl_metamodel_tag_relation')
+            ->where('tl_metamodel_tag_relation.att_id=:attId')
+            ->andWhere('tl_metamodel_tag_relation.item_id IN (:itemIds)')
             ->setParameter('attId', $this->get('id'))
             ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
             ->execute();

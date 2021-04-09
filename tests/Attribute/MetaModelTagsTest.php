@@ -195,15 +195,15 @@ class MetaModelTagsTest extends TestCase
             ->getMockBuilder(QueryBuilder::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $builder->expects($this->once())->method('select')->with('id')->willReturn($builder);
-        $builder->expects($this->once())->method('from')->with('mm_test_tags')->willReturn($builder);
-        $builder->expects($this->once())->method('where')->with('id IN (:values)')->willReturn($builder);
+        $builder->expects($this->once())->method('select')->with('t.id')->willReturn($builder);
+        $builder->expects($this->once())->method('from')->with('mm_test_tags', 't')->willReturn($builder);
+        $builder->expects($this->once())->method('where')->with('t.id IN (:values)')->willReturn($builder);
         $builder
             ->expects($this->once())
             ->method('setParameter')
             ->with('values', [10], Connection::PARAM_STR_ARRAY)
             ->willReturn($builder);
-        $builder->expects($this->once())->method('orderBy')->with('FIELD(id,:values)')->willReturn($builder);
+        $builder->expects($this->once())->method('orderBy')->with('FIELD(t.id,:values)')->willReturn($builder);
         $builder->expects($this->once())->method('execute')->willReturn($statement);
 
         $connection->expects($this->once())->method('createQueryBuilder')->willReturn($builder);

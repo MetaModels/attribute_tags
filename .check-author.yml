@@ -15,3 +15,7 @@ mapping:
     - 'David Maack <maack@men-at-work.de>'
   'Christopher Boelter <christopher@boelter.eu>': 'cboelter <christopher@boelter.eu>'
   'Patrick Heller <ph@wacg.de>': 'ph <ph@wacg.de>'
+  'Ingolf Steinhardt <info@e-spin.de>':
+    - 'zonky <info@e-spin.de>'
+    - 'zonky2 <info@e-spin.de>'
+    - 'e-spin <gitlab@e-spin.de>'

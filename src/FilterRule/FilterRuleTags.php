@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2020 The MetaModels team.
+ * (c) 2012-2021 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,7 +20,7 @@
  * @author     Patrick Heller <ph@wacg.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2020 The MetaModels team.
+ * @copyright  2012-2021 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -142,14 +142,16 @@ class FilterRuleTags extends FilterRule
             }
         } else {
             if ($strColNameAlias == 'id') {
-                $values = $arrValues;
-            } else {
-                $values = [];
-                foreach ($arrValues as $value) {
-                    $values[] = \array_values(
-                        $this->getTagMetaModel()->getAttribute($strColNameAlias)->searchFor($value)
-                    );
-                }
+                return $this->flatten($arrValues);
+            }
+            $attribute = $this->getTagMetaModel()->getAttribute($strColNameAlias);
+            if (null === $attribute) {
+                return $this->flatten($arrValues);
+            }
+
+            $values = [];
+            foreach ($arrValues as $value) {
+                $values[] = \array_values($attribute->searchFor($value));
             }
 
             $arrValues = $this->flatten($values);

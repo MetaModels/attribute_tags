@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2021 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,7 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2021 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -34,6 +34,7 @@ use MetaModels\IItem;
 use MetaModels\IItems;
 use MetaModels\IMetaModel;
 use MetaModels\Items;
+use MetaModels\ITranslatedMetaModel;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -428,6 +429,44 @@ class MetaModelTags extends AbstractTags
             $this->getAliasColumn(),
             $arrCount
         );
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+     */
+    public function getFilterOptionsForDcGeneral(): array
+    {
+        if (!$this->isFilterOptionRetrievingPossible(null)) {
+            return [];
+        }
+
+        $metaModel = $this->getTagMetaModel();
+        if (!$metaModel instanceof ITranslatedMetaModel) {
+            $originalLanguage       = $GLOBALS['TL_LANGUAGE'];
+            $GLOBALS['TL_LANGUAGE'] = $this->getMetaModel()->getActiveLanguage();
+        }
+
+        $filter = $this->getTagMetaModel()->getEmptyFilter();
+
+        $this->buildFilterRulesForFilterSetting($filter);
+
+        $objItems = $this->getTagMetaModel()->findByFilter(
+            $filter,
+            $this->getSortingColumn(),
+            0,
+            0,
+            'ASC',
+            [$this->getValueColumn(), $this->getIdColumn()]
+        );
+
+        if (isset($originalLanguage)) {
+            $GLOBALS['TL_LANGUAGE'] = $originalLanguage;
+        }
+
+        return $this->convertItemsToFilterOptions($objItems, $this->getValueColumn(), $this->getIdColumn());
     }
 
     /**

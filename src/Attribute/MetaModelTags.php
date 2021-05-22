@@ -34,6 +34,7 @@ use MetaModels\IItem;
 use MetaModels\IItems;
 use MetaModels\IMetaModel;
 use MetaModels\Items;
+use MetaModels\ITranslatedMetaModel;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -431,6 +432,44 @@ class MetaModelTags extends AbstractTags
             $this->getAliasColumn(),
             $arrCount
         );
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+     */
+    public function getFilterOptionsForDcGeneral(): array
+    {
+        if (!$this->isFilterOptionRetrievingPossible(null)) {
+            return [];
+        }
+
+        $metaModel = $this->getTagMetaModel();
+        if (!$metaModel instanceof ITranslatedMetaModel) {
+            $originalLanguage       = $GLOBALS['TL_LANGUAGE'];
+            $GLOBALS['TL_LANGUAGE'] = $this->getMetaModel()->getActiveLanguage();
+        }
+
+        $filter = $this->getTagMetaModel()->getEmptyFilter();
+
+        $this->buildFilterRulesForFilterSetting($filter);
+
+        $objItems = $this->getTagMetaModel()->findByFilter(
+            $filter,
+            $this->getSortingColumn(),
+            0,
+            0,
+            'ASC',
+            [$this->getValueColumn(), $this->getIdColumn()]
+        );
+
+        if (isset($originalLanguage)) {
+            $GLOBALS['TL_LANGUAGE'] = $originalLanguage;
+        }
+
+        return $this->convertItemsToFilterOptions($objItems, $this->getValueColumn(), $this->getIdColumn());
     }
 
     /**

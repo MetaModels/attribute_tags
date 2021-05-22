@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2021 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,7 +20,7 @@
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2021 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -28,6 +28,7 @@
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\ResultStatement;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -40,7 +41,7 @@ class Tags extends AbstractTags
     protected function checkConfiguration()
     {
         return parent::checkConfiguration()
-            && $this->getConnection()->getSchemaManager()->tablesExist([$this->getTagSource()]);
+               && $this->getConnection()->getSchemaManager()->tablesExist([$this->getTagSource()]);
     }
 
     /**
@@ -54,9 +55,9 @@ class Tags extends AbstractTags
 
         $strColNameAlias = $this->getAliasColumn();
 
-        $arrResult = array();
+        $arrResult = [];
         foreach ($varValue as $arrValue) {
-            if (!is_array($arrValue) || !array_key_exists($strColNameAlias, $arrValue)) {
+            if (!\is_array($arrValue) || !\array_key_exists($strColNameAlias, $arrValue)) {
                 continue;
             }
             $arrResult[] = $arrValue[$strColNameAlias];
@@ -94,11 +95,27 @@ class Tags extends AbstractTags
             $result[$value[$idname]]                      = $value;
             $result[$value[$idname]]['tag_value_sorting'] = \array_search($value[$alias], $varValue);
         }
-        uasort($result, function ($value1, $value2) {
-            return ($value1['tag_value_sorting'] - $value2['tag_value_sorting']);
-        });
+        \uasort(
+            $result,
+            function ($value1, $value2) {
+                return ($value1['tag_value_sorting'] - $value2['tag_value_sorting']);
+            }
+        );
 
         return $result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFilterOptionsForDcGeneral(): array
+    {
+        if (!$this->isFilterOptionRetrievingPossible(null)) {
+            return [];
+        }
+
+        $values = $this->getOptionStatement(null, false);
+        return $this->convertOptionsList($values, $this->getIdColumn(), $this->getValueColumn());
     }
 
     /**
@@ -112,52 +129,8 @@ class Tags extends AbstractTags
             return [];
         }
 
-        $idColumn = $this->getIdColumn();
-        $builder  = $this->getConnection()->createQueryBuilder();
-        $builder
-            ->setParameter('attId', $this->get('id'))
-            ->from($this->getTagSource(), 'v')
-            ->leftJoin(
-                'v',
-                'tl_metamodel_tag_relation',
-                'r',
-                '(r.att_id=:attId) AND (r.value_id=v.' . $idColumn . ')'
-            )
-            ->groupBy('v.' . $idColumn)
-            ->orderBy('v.' . $this->getSortingColumn());
-
-        if ($usedOnly) {
-            $builder->select('COUNT(v.' . $idColumn . ') AS mm_count');
-            if (!empty($idList)) {
-                $builder
-                    ->where('r.item_id IN (:valueIds)')
-                    ->setParameter('valueIds', $idList, Connection::PARAM_STR_ARRAY);
-            }
-        } else {
-            $builder->select('COUNT(r.value_id) AS mm_count');
-            if (!empty($idList)) {
-                $builder
-                    ->where('v.' . $idColumn . ' IN (:valueIds)')
-                    ->setParameter('valueIds', $idList, Connection::PARAM_STR_ARRAY);
-            }
-        }
-        $builder->addSelect('v.*');
-
-        if ($additionalWhere = $this->getWhereColumn()) {
-            $builder->andWhere($additionalWhere);
-        }
-
-        $aliasColumn = $this->getAliasColumn();
-        $valueColumn = $this->getValueColumn();
-        $result      = [];
-        foreach ($builder->execute()->fetchAll(\PDO::FETCH_ASSOC) as $value) {
-            if ($arrCount !== null) {
-                $arrCount[$value[$aliasColumn]] = $value['mm_count'];
-            }
-            $result[$value[$aliasColumn]] = $value[$valueColumn];
-        }
-
-        return $result;
+        $values = $this->getOptionStatement($idList, $usedOnly);
+        return $this->convertOptionsList($values, $this->getAliasColumn(), $this->getValueColumn(), $arrCount);
     }
 
     /**
@@ -200,5 +173,81 @@ class Tags extends AbstractTags
         }
 
         return $result;
+    }
+
+    /**
+     * Get statement of options list.
+     *
+     * @param array|null $idList   The value id list.
+     * @param bool       $usedOnly The flag if only used values shall be returned.
+     *
+     * @return ResultStatement
+     */
+    private function getOptionStatement(?array $idList, bool $usedOnly): ResultStatement
+    {
+        $idColumn = $this->getIdColumn();
+        $builder  = $this->getConnection()->createQueryBuilder();
+        $builder
+            ->setParameter('attId', $this->get('id'))
+            ->from($this->getTagSource(), 'v')
+            ->leftJoin(
+                'v',
+                'tl_metamodel_tag_relation',
+                'r',
+                '(r.att_id=:attId) AND (r.value_id=v.' . $idColumn . ')'
+            )
+            ->groupBy('v.' . $idColumn)
+            ->orderBy('v.' . $this->getSortingColumn());
+
+        if ($usedOnly) {
+            $builder->select('COUNT(v.' . $idColumn . ') AS mm_count');
+            if (!empty($idList)) {
+                $builder
+                    ->where('r.item_id IN (:valueIds)')
+                    ->setParameter('valueIds', $idList, Connection::PARAM_STR_ARRAY);
+            }
+        } else {
+            $builder->select('COUNT(r.value_id) AS mm_count');
+            if (!empty($idList)) {
+                $builder
+                    ->where('v.' . $idColumn . ' IN (:valueIds)')
+                    ->setParameter('valueIds', $idList, Connection::PARAM_STR_ARRAY);
+            }
+        }
+        $builder->addSelect('v.*');
+
+        if ($additionalWhere = $this->getWhereColumn()) {
+            $builder->andWhere($additionalWhere);
+        }
+
+        return $builder->execute();
+    }
+
+    /**
+     * Convert the database result into a proper result array.
+     *
+     * @param ResultStatement $statement   The database result statement.
+     * @param string          $aliasColumn The name of the alias column to be used.
+     * @param string          $valueColumn The name of the value column.
+     * @param array|null      $count       The optional count array.
+     *
+     * @return array
+     */
+    private function convertOptionsList(
+        ResultStatement $statement,
+        string $aliasColumn,
+        string $valueColumn,
+        ?array &$count = null
+    ): array {
+        $return = [];
+        while ($values = $statement->fetchAssociative()) {
+            if (is_array($count)) {
+                $count[$values[$aliasColumn]] = $values['mm_count'];
+            }
+
+            $return[$values[$aliasColumn]] = $values[$valueColumn];
+        }
+
+        return $return;
     }
 }

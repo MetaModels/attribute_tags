@@ -461,15 +461,15 @@ class MetaModelTags extends AbstractTags
             $this->getSortingColumn(),
             0,
             0,
-            'ASC',
-            [$this->getValueColumn(), $this->getIdColumn()]
+            $this->getSortDirection(),
+            [$this->getAliasColumn(), $this->getValueColumn()]
         );
 
         if (isset($originalLanguage)) {
             $GLOBALS['TL_LANGUAGE'] = $originalLanguage;
         }
 
-        return $this->convertItemsToFilterOptions($objItems, $this->getValueColumn(), $this->getIdColumn());
+        return $this->convertItemsToFilterOptions($objItems, $this->getValueColumn(), $this->getAliasColumn());
     }
 
     /**

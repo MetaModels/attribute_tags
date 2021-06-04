@@ -115,7 +115,8 @@ class Tags extends AbstractTags
         }
 
         $values = $this->getOptionStatement(null, false);
-        return $this->convertOptionsList($values, $this->getIdColumn(), $this->getValueColumn());
+
+        return $this->convertOptionsList($values, $this->getAliasColumn(), $this->getValueColumn());
     }
 
     /**
@@ -130,6 +131,7 @@ class Tags extends AbstractTags
         }
 
         $values = $this->getOptionStatement($idList, $usedOnly);
+
         return $this->convertOptionsList($values, $this->getAliasColumn(), $this->getValueColumn(), $arrCount);
     }
 

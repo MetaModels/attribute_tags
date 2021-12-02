@@ -584,6 +584,19 @@ class MetaModelTags extends AbstractTags
         $result = [];
         foreach ($valueIds as $itemId => $tagIds) {
             foreach ($tagIds as $tagId) {
+                if (!array_key_exists($tagId, $values)) {
+                    @trigger_error(
+                        \sprintf(
+                            'Warning, skipping unknown metamodels_attributetags item value %1$s.%2$s.%3$s %4$s',
+                            $this->getMetaModel()->getTableName(),
+                            $itemId,
+                            $this->getColName(),
+                            $tagId
+                        ),
+                        E_USER_NOTICE
+                    );
+                    continue;
+                }
                 $result[$itemId][$tagId] = $values[$tagId];
             }
         }

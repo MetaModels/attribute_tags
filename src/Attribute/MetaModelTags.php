@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2021 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,8 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @author     Marc Reimann <reimann@mediendepot-ruhr.de>
+ * @copyright  2012-2021 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -584,6 +585,19 @@ class MetaModelTags extends AbstractTags
         $result = [];
         foreach ($valueIds as $itemId => $tagIds) {
             foreach ($tagIds as $tagId) {
+                if (!array_key_exists($tagId, $values)) {
+                    @trigger_error(
+                        \sprintf(
+                            'Warning, skipping unknown metamodels_attributetags item value %1$s.%2$s.%3$s %4$s',
+                            $this->getMetaModel()->getTableName(),
+                            $itemId,
+                            $this->getColName(),
+                            $tagId
+                        ),
+                        E_USER_NOTICE
+                    );
+                    continue;
+                }
                 $result[$itemId][$tagId] = $values[$tagId];
             }
         }

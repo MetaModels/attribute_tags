@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2020 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,7 +17,7 @@
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Richard Henkenjohann <richardhenkenjohann@googlemail.com>
- * @copyright  2012-2020 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -38,6 +38,7 @@ use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\PropertyInterface;
 use ContaoCommunityAlliance\DcGeneral\Factory\Event\BuildDataDefinitionEvent;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
+use MetaModels\Attribute\IInternal;
 use MetaModels\DcGeneral\DataDefinition\Palette\Condition\Property\ConditionTableNameIsMetaModel;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
 use MetaModels\IFactory;
@@ -379,7 +380,7 @@ class BackendListener
     private function getColumnNamesFrom($table)
     {
         if (0 === \strpos($table, 'mm_')) {
-            $attributes = $this->getAttributeNamesFrom($table);
+            [$attributes, $internal] = $this->getAttributeNamesFrom($table);
             \asort($attributes);
 
             $sql       = $this->translator->trans(
@@ -396,7 +397,7 @@ class BackendListener
             return [
                 $sql       => \array_diff_key(
                     $this->getColumnNamesFromTable($table),
-                    \array_flip(\array_keys($attributes))
+                    \array_flip(\array_merge(\array_keys($attributes), \array_keys($internal)))
                 ),
                 $attribute => $attributes,
             ];
@@ -409,7 +410,6 @@ class BackendListener
      * Retrieve all columns from a database table.
      *
      * @param string     $tableName  The database table name.
-     *
      * @param array|null $typeFilter Optional of types to filter for.
      *
      * @return string[]
@@ -442,12 +442,12 @@ class BackendListener
      *
      * @param string $metaModelName The name of the MetaModel.
      *
-     * @return string[]
+     * @return array{0: list<string>, 1: list<string>}
      */
-    private function getAttributeNamesFrom($metaModelName)
+    private function getAttributeNamesFrom(string $metaModelName): array
     {
         $metaModel = $this->factory->getMetaModel($metaModelName);
-        $result    = [];
+        $result    = [[], []];
         if (null === $metaModel) {
             return $result;
         }
@@ -457,7 +457,13 @@ class BackendListener
             $column = $attribute->getColName();
             $type   = $attribute->get('type');
 
-            $result[$column] = \sprintf('%s [%s, "%s"]', $name, $type, $column);
+            // Hide virtual types.
+            if ($attribute instanceof IInternal) {
+                $result[1][$column] = true;
+                continue;
+            }
+
+            $result[0][$column] = \sprintf('%s [%s, "%s"]', $name, $type, $column);
         }
 
         return $result;

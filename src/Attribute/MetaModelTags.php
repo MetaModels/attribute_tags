@@ -449,7 +449,7 @@ class MetaModelTags extends AbstractTags
         $metaModel = $this->getTagMetaModel();
         if (!$metaModel instanceof ITranslatedMetaModel) {
             $originalLanguage       = $GLOBALS['TL_LANGUAGE'];
-            $GLOBALS['TL_LANGUAGE'] = $this->getMetaModel()->getActiveLanguage();
+            $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $this->getMetaModel()->getActiveLanguage());
         }
 
         $filter = $this->getTagMetaModel()->getEmptyFilter();

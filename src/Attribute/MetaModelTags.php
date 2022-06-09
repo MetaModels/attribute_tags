@@ -26,6 +26,7 @@ namespace MetaModels\AttributeTagsBundle\Attribute;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\ITranslated;
 use MetaModels\Filter\IFilter;
+use MetaModels\Filter\Rules\SearchAttribute;
 use MetaModels\Filter\Rules\SimpleQuery;
 use MetaModels\Filter\Rules\StaticIdList;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
@@ -634,5 +635,125 @@ class MetaModelTags extends AbstractTags
         }
 
         return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIdForAlias(string $alias, string $language): ?string
+    {
+        if (!$this->isProperlyConfigured()) {
+            return null;
+        }
+
+        // Check if the current MM has translations.
+        $aliasColumn        = $this->getAliasColumn();
+        $relatedModel       = $this->getTagMetaModel();
+        $currentLanguage    = null;
+        $supportedLanguages = null;
+
+        if ($relatedModel instanceof ITranslatedMetaModel) {
+            $supportedLanguages = $relatedModel->getLanguages();
+            $fallbackLanguage   = $relatedModel->getMainLanguage();
+        } elseif ($relatedModel->isTranslated()) {
+            $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
+            $supportedLanguages = $relatedModel->getAvailableLanguages();
+            $fallbackLanguage   = $relatedModel->getFallbackLanguage() ?? $backendLanguage;
+        }
+
+        if (\is_array($supportedLanguages) && !empty($supportedLanguages)) {
+            if (\in_array($language, $supportedLanguages, false)) {
+                $currentLanguage = $language;
+            } else {
+                $currentLanguage = $fallbackLanguage;
+            }
+        }
+
+        // Retrieve original language only if target language is set.
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($language);
+            } elseif ($relatedModel->isTranslated()) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
+            }
+        }
+
+        // Find the alias in the related metamodels, if there is no found return null.
+        // On more then one result return the first one.
+        $filter = $relatedModel->getEmptyFilter();
+        $filter->addFilterRule(new SearchAttribute($relatedModel->getAttribute($aliasColumn), $alias));
+        $items = $relatedModel->findByFilter($filter);
+
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($currentLanguage);
+            } elseif ($relatedModel->isTranslated()) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
+            }
+        }
+
+        if ($items->getCount() == 0) {
+            return null;
+        }
+
+        return $items->first()->current()->get('id');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAliasForId(string $id, string $language): ?string
+    {
+        if (!$this->isProperlyConfigured()) {
+            return null;
+        }
+
+        // Check if the current MM has translations.
+        $aliasColumn        = $this->getAliasColumn();
+        $relatedModel       = $this->getTagMetaModel();
+        $currentLanguage    = null;
+        $supportedLanguages = null;
+        $fallbackLanguage   = null;
+
+        if ($relatedModel instanceof ITranslatedMetaModel) {
+            $supportedLanguages = $relatedModel->getLanguages();
+            $fallbackLanguage   = $relatedModel->getMainLanguage();
+        } elseif ($relatedModel->isTranslated()) {
+            $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
+            $supportedLanguages = $relatedModel->getAvailableLanguages();
+            $fallbackLanguage   = $relatedModel->getFallbackLanguage() ?? $backendLanguage;
+        }
+
+        if (\is_array($supportedLanguages) && !empty($supportedLanguages)) {
+            if (\in_array($language, $supportedLanguages, false)) {
+                $currentLanguage = $language;
+            } else {
+                $currentLanguage = $fallbackLanguage;
+            }
+        }
+
+        // Retrieve original language only if target language is set.
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($language);
+            } elseif ($relatedModel->isTranslated()) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
+            }
+        }
+
+        $item = $relatedModel->findById($id, [$aliasColumn]);
+        if ($item === null) {
+            return null;
+        }
+
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($currentLanguage);
+            } elseif ($relatedModel->isTranslated()) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
+            }
+        }
+
+        return $item->parseAttribute($aliasColumn)['text'] ?? null;
     }
 }

@@ -28,7 +28,9 @@
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Exception as DbalDriverException;
 use Doctrine\DBAL\Driver\ResultStatement;
+use Doctrine\DBAL\Exception;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -251,5 +253,64 @@ class Tags extends AbstractTags
         }
 
         return $return;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIdForAlias(string $alias, string $language): ?string
+    {
+        $strAliasColumn = $this->getAliasColumn();
+        $strColNameId   = $this->getIdColumn();
+
+        return $this->getSearchedValue($strColNameId, $strAliasColumn, $alias);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAliasForId(string $id, string $language): ?string
+    {
+        $strAliasColumn = $this->getAliasColumn();
+        $strColNameId   = $this->getIdColumn();
+
+        return $this->getSearchedValue($strAliasColumn, $strColNameId, $id);
+    }
+
+    /**
+     * Helper function for getting a value for a searched value.
+     *
+     * @param string $returnColumn The column for the return.
+     * @param string $searchColumn The column for the search.
+     * @param string $search       The searched value.
+     *
+     * @return string|null
+     */
+    private function getSearchedValue(string $returnColumn, string $searchColumn, string $search): ?string
+    {
+        if (!$this->isProperlyConfigured()) {
+            return null;
+        }
+
+        $strTableNameId = $this->getTagSource();
+
+        try {
+            $builder = $this->getConnection()->createQueryBuilder()
+                ->select('sourceTable.' . $returnColumn)
+                ->from($strTableNameId, 'sourceTable')
+                ->where('sourceTable.' . $searchColumn . ' = :search')
+                ->setMaxResults(1)
+                ->setParameter('search', $search)
+                ->execute();
+
+            if ($builder->rowCount() == 0) {
+                return null;
+            }
+            $result = $builder->fetchOne();
+
+            return (string)$result;
+        } catch (Exception|DbalDriverException $e) {
+            return null;
+        }
     }
 }

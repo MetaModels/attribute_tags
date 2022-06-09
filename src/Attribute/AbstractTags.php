@@ -26,6 +26,7 @@ namespace MetaModels\AttributeTagsBundle\Attribute;
 use Contao\System;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\BaseComplex;
+use MetaModels\Attribute\IAliasConverter;
 use MetaModels\AttributeTagsBundle\FilterRule\FilterRuleTags;
 use MetaModels\IMetaModel;
 use MetaModels\Render\Template;
@@ -33,7 +34,7 @@ use MetaModels\Render\Template;
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
  */
-abstract class AbstractTags extends BaseComplex
+abstract class AbstractTags extends BaseComplex implements IAliasConverter
 {
     /**
      * The widget mode to use.

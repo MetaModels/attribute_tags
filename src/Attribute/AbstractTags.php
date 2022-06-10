@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2021 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,7 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2021 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -247,10 +247,10 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
     protected function checkConfiguration()
     {
         return $this->getTagSource()
-            && $this->getValueColumn()
-            && $this->getAliasColumn()
-            && $this->getIdColumn()
-            && $this->getSortingColumn();
+               && $this->getValueColumn()
+               && $this->getAliasColumn()
+               && $this->getIdColumn()
+               && $this->getSortingColumn();
     }
 
     /**
@@ -514,13 +514,13 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
             $builder = $this
                 ->connection
                 ->createQueryBuilder()
-                    ->insert('tl_metamodel_tag_relation')
-                    ->values([
-                        'tl_metamodel_tag_relation.att_id'        => ':attId',
-                        'tl_metamodel_tag_relation.item_id'       => ':itemId',
-                        'tl_metamodel_tag_relation.value_sorting' => ':sorting',
-                        'tl_metamodel_tag_relation.value_id'      => ':valueId',
-                    ]);
+                ->insert('tl_metamodel_tag_relation')
+                ->values([
+                             'tl_metamodel_tag_relation.att_id'        => ':attId',
+                             'tl_metamodel_tag_relation.item_id'       => ':itemId',
+                             'tl_metamodel_tag_relation.value_sorting' => ':sorting',
+                             'tl_metamodel_tag_relation.value_id'      => ':valueId',
+                         ]);
 
             foreach ($insertValues as $value) {
                 $builder

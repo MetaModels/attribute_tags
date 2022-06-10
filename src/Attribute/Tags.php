@@ -306,9 +306,8 @@ class Tags extends AbstractTags
             if ($builder->rowCount() == 0) {
                 return null;
             }
-            $result = $builder->fetchOne();
 
-            return (string)$result;
+            return (string)$builder->fetchOne();
         } catch (Exception|DbalDriverException $e) {
             return null;
         }

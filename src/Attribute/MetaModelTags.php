@@ -74,7 +74,7 @@ class MetaModelTags extends AbstractTags
      * Note that you should not use this directly but use the factory classes to instantiate attributes.
      *
      * @param IMetaModel            $objMetaModel         The MetaModel instance this attribute belongs to.
-     * @param array $arrData                              The information array, for attribute information, refer
+     * @param array                 $arrData              The information array, for attribute information, refer
      *                                                    to documentation of table tl_metamodel_attribute and
      *                                                    documentation of the certain attribute classes for
      *                                                    information what values are understood.
@@ -101,7 +101,7 @@ class MetaModelTags extends AbstractTags
     protected function checkConfiguration()
     {
         return parent::checkConfiguration()
-            && (null !== $this->getTagMetaModel());
+               && (null !== $this->getTagMetaModel());
     }
 
     /**
@@ -223,7 +223,7 @@ class MetaModelTags extends AbstractTags
         if ($this->isCheckboxWizard() || $this->isTreePicker()) {
             // Keep order from input array, and add non existent ids to the end.
             return $sorting[$cacheKey] = \array_merge(
-                // Keep order from input array...
+            // Keep order from input array...
                 \array_intersect($idList, $itemIds),
                 // ... and add non existent ids to the end.
                 \array_diff($idList, $itemIds)
@@ -273,7 +273,7 @@ class MetaModelTags extends AbstractTags
         $aliasColumn = $this->getAliasColumn();
         $alias       = [];
         foreach ($varValue as $valueId => $value) {
-            if(!\is_array($value)) {
+            if (!\is_array($value)) {
                 continue;
             }
             if (\array_key_exists($aliasColumn, $value)) {
@@ -679,7 +679,7 @@ class MetaModelTags extends AbstractTags
         }
 
         // Find the alias in the related metamodels, if there is no found return null.
-        // On more then one result return the first one.
+        // On more than one result return the first one.
         $filter = $relatedModel->getEmptyFilter();
         $filter->addFilterRule(new SearchAttribute($relatedModel->getAttribute($aliasColumn), $alias));
         $items = $relatedModel->findByFilter($filter);

@@ -26,6 +26,7 @@ namespace MetaModels\AttributeTagsBundle\Attribute;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\ITranslated;
 use MetaModels\Filter\IFilter;
+use MetaModels\Filter\Rules\SearchAttribute;
 use MetaModels\Filter\Rules\SimpleQuery;
 use MetaModels\Filter\Rules\StaticIdList;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
@@ -73,7 +74,7 @@ class MetaModelTags extends AbstractTags
      * Note that you should not use this directly but use the factory classes to instantiate attributes.
      *
      * @param IMetaModel            $objMetaModel         The MetaModel instance this attribute belongs to.
-     * @param array $arrData                              The information array, for attribute information, refer
+     * @param array                 $arrData              The information array, for attribute information, refer
      *                                                    to documentation of table tl_metamodel_attribute and
      *                                                    documentation of the certain attribute classes for
      *                                                    information what values are understood.
@@ -100,7 +101,7 @@ class MetaModelTags extends AbstractTags
     protected function checkConfiguration()
     {
         return parent::checkConfiguration()
-            && (null !== $this->getTagMetaModel());
+               && (null !== $this->getTagMetaModel());
     }
 
     /**
@@ -222,7 +223,7 @@ class MetaModelTags extends AbstractTags
         if ($this->isCheckboxWizard() || $this->isTreePicker()) {
             // Keep order from input array, and add non existent ids to the end.
             return $sorting[$cacheKey] = \array_merge(
-                // Keep order from input array...
+            // Keep order from input array...
                 \array_intersect($idList, $itemIds),
                 // ... and add non existent ids to the end.
                 \array_diff($idList, $itemIds)
@@ -272,7 +273,7 @@ class MetaModelTags extends AbstractTags
         $aliasColumn = $this->getAliasColumn();
         $alias       = [];
         foreach ($varValue as $valueId => $value) {
-            if(!\is_array($value)) {
+            if (!\is_array($value)) {
                 continue;
             }
             if (\array_key_exists($aliasColumn, $value)) {
@@ -634,5 +635,125 @@ class MetaModelTags extends AbstractTags
         }
 
         return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIdForAlias(string $alias, string $language): ?string
+    {
+        if (!$this->isProperlyConfigured()) {
+            return null;
+        }
+
+        // Check if the current MM has translations.
+        $aliasColumn        = $this->getAliasColumn();
+        $relatedModel       = $this->getTagMetaModel();
+        $currentLanguage    = null;
+        $supportedLanguages = null;
+
+        if ($relatedModel instanceof ITranslatedMetaModel) {
+            $supportedLanguages = $relatedModel->getLanguages();
+            $fallbackLanguage   = $relatedModel->getMainLanguage();
+        } elseif ($relatedModel->isTranslated(false)) {
+            $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
+            $supportedLanguages = $relatedModel->getAvailableLanguages();
+            $fallbackLanguage   = $relatedModel->getFallbackLanguage() ?? $backendLanguage;
+        }
+
+        if (\is_array($supportedLanguages) && !empty($supportedLanguages)) {
+            if (\in_array($language, $supportedLanguages, false)) {
+                $currentLanguage = $language;
+            } else {
+                $currentLanguage = $fallbackLanguage;
+            }
+        }
+
+        // Retrieve original language only if target language is set.
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($language);
+            } elseif ($relatedModel->isTranslated(false)) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
+            }
+        }
+
+        // Find the alias in the related metamodels, if there is no found return null.
+        // On more than one result return the first one.
+        $filter = $relatedModel->getEmptyFilter();
+        $filter->addFilterRule(new SearchAttribute($relatedModel->getAttribute($aliasColumn), $alias));
+        $items = $relatedModel->findByFilter($filter);
+
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($currentLanguage);
+            } elseif ($relatedModel->isTranslated(false)) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
+            }
+        }
+
+        if ($items->getCount() == 0) {
+            return null;
+        }
+
+        return $items->first()->current()->get('id');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAliasForId(string $id, string $language): ?string
+    {
+        if (!$this->isProperlyConfigured()) {
+            return null;
+        }
+
+        // Check if the current MM has translations.
+        $aliasColumn        = $this->getAliasColumn();
+        $relatedModel       = $this->getTagMetaModel();
+        $currentLanguage    = null;
+        $supportedLanguages = null;
+        $fallbackLanguage   = null;
+
+        if ($relatedModel instanceof ITranslatedMetaModel) {
+            $supportedLanguages = $relatedModel->getLanguages();
+            $fallbackLanguage   = $relatedModel->getMainLanguage();
+        } elseif ($relatedModel->isTranslated(false)) {
+            $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
+            $supportedLanguages = $relatedModel->getAvailableLanguages();
+            $fallbackLanguage   = $relatedModel->getFallbackLanguage() ?? $backendLanguage;
+        }
+
+        if (\is_array($supportedLanguages) && !empty($supportedLanguages)) {
+            if (\in_array($language, $supportedLanguages, false)) {
+                $currentLanguage = $language;
+            } else {
+                $currentLanguage = $fallbackLanguage;
+            }
+        }
+
+        // Retrieve original language only if target language is set.
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($language);
+            } elseif ($relatedModel->isTranslated(false)) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
+            }
+        }
+
+        $item = $relatedModel->findById($id, [$aliasColumn]);
+        if ($item === null) {
+            return null;
+        }
+
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($currentLanguage);
+            } elseif ($relatedModel->isTranslated(false)) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
+            }
+        }
+
+        return $item->parseAttribute($aliasColumn)['text'] ?? null;
     }
 }

@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2021 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,7 +20,7 @@
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2021 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -28,7 +28,9 @@
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Exception as DbalDriverException;
 use Doctrine\DBAL\Driver\ResultStatement;
+use Doctrine\DBAL\Exception;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -251,5 +253,63 @@ class Tags extends AbstractTags
         }
 
         return $return;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIdForAlias(string $alias, string $language): ?string
+    {
+        $strAliasColumn = $this->getAliasColumn();
+        $strColNameId   = $this->getIdColumn();
+
+        return $this->getSearchedValue($strColNameId, $strAliasColumn, $alias);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAliasForId(string $id, string $language): ?string
+    {
+        $strAliasColumn = $this->getAliasColumn();
+        $strColNameId   = $this->getIdColumn();
+
+        return $this->getSearchedValue($strAliasColumn, $strColNameId, $id);
+    }
+
+    /**
+     * Helper function for getting a value for a searched value.
+     *
+     * @param string $returnColumn The column for the return.
+     * @param string $searchColumn The column for the search.
+     * @param string $search       The searched value.
+     *
+     * @return string|null
+     */
+    private function getSearchedValue(string $returnColumn, string $searchColumn, string $search): ?string
+    {
+        if (!$this->isProperlyConfigured()) {
+            return null;
+        }
+
+        $strTableNameId = $this->getTagSource();
+
+        try {
+            $builder = $this->getConnection()->createQueryBuilder()
+                ->select('sourceTable.' . $returnColumn)
+                ->from($strTableNameId, 'sourceTable')
+                ->where('sourceTable.' . $searchColumn . ' = :search')
+                ->setMaxResults(1)
+                ->setParameter('search', $search)
+                ->execute();
+
+            if ($builder->rowCount() == 0) {
+                return null;
+            }
+
+            return (string)$builder->fetchOne();
+        } catch (Exception|DbalDriverException $e) {
+            return null;
+        }
     }
 }

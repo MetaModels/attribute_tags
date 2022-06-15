@@ -655,7 +655,7 @@ class MetaModelTags extends AbstractTags
         if ($relatedModel instanceof ITranslatedMetaModel) {
             $supportedLanguages = $relatedModel->getLanguages();
             $fallbackLanguage   = $relatedModel->getMainLanguage();
-        } elseif ($relatedModel->isTranslated()) {
+        } elseif ($relatedModel->isTranslated(false)) {
             $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
             $supportedLanguages = $relatedModel->getAvailableLanguages();
             $fallbackLanguage   = $relatedModel->getFallbackLanguage() ?? $backendLanguage;
@@ -673,7 +673,7 @@ class MetaModelTags extends AbstractTags
         if ($currentLanguage) {
             if ($relatedModel instanceof ITranslatedMetaModel) {
                 $relatedModel->selectLanguage($language);
-            } elseif ($relatedModel->isTranslated()) {
+            } elseif ($relatedModel->isTranslated(false)) {
                 $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
             }
         }
@@ -687,7 +687,7 @@ class MetaModelTags extends AbstractTags
         if ($currentLanguage) {
             if ($relatedModel instanceof ITranslatedMetaModel) {
                 $relatedModel->selectLanguage($currentLanguage);
-            } elseif ($relatedModel->isTranslated()) {
+            } elseif ($relatedModel->isTranslated(false)) {
                 $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
             }
         }
@@ -718,7 +718,7 @@ class MetaModelTags extends AbstractTags
         if ($relatedModel instanceof ITranslatedMetaModel) {
             $supportedLanguages = $relatedModel->getLanguages();
             $fallbackLanguage   = $relatedModel->getMainLanguage();
-        } elseif ($relatedModel->isTranslated()) {
+        } elseif ($relatedModel->isTranslated(false)) {
             $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
             $supportedLanguages = $relatedModel->getAvailableLanguages();
             $fallbackLanguage   = $relatedModel->getFallbackLanguage() ?? $backendLanguage;
@@ -736,7 +736,7 @@ class MetaModelTags extends AbstractTags
         if ($currentLanguage) {
             if ($relatedModel instanceof ITranslatedMetaModel) {
                 $relatedModel->selectLanguage($language);
-            } elseif ($relatedModel->isTranslated()) {
+            } elseif ($relatedModel->isTranslated(false)) {
                 $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
             }
         }
@@ -749,7 +749,7 @@ class MetaModelTags extends AbstractTags
         if ($currentLanguage) {
             if ($relatedModel instanceof ITranslatedMetaModel) {
                 $relatedModel->selectLanguage($currentLanguage);
-            } elseif ($relatedModel->isTranslated()) {
+            } elseif ($relatedModel->isTranslated(false)) {
                 $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
             }
         }

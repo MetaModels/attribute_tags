@@ -92,7 +92,7 @@ class Tags extends AbstractTags
             ->execute();
 
         $result = [];
-        foreach ($values->fetchAll(\PDO::FETCH_ASSOC) as $value) {
+        foreach ($values->fetchAssociative() as $value) {
             // Adding the sorting from widget.
             $result[$value[$idname]]                      = $value;
             $result[$value[$idname]]['tag_value_sorting'] = \array_search($value[$alias], $varValue);
@@ -172,7 +172,7 @@ class Tags extends AbstractTags
         $statement = $builder->execute();
 
         $result = [];
-        foreach ($statement->fetchAll(\PDO::FETCH_ASSOC) as $value) {
+        foreach ($statement->fetchAssociative() as $value) {
             if (!isset($result[$value[$itemIdColumn]])) {
                 $result[$value[$itemIdColumn]] = [];
             }

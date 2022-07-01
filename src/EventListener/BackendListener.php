@@ -226,7 +226,7 @@ class BackendListener
             ->execute();
 
         $result = [];
-        foreach ($filters->fetchAll(\PDO::FETCH_ASSOC) as $filter) {
+        foreach ($filters->fetchAssociative() as $filter) {
             $result[$filter['id']] = $filter['name'];
         }
 

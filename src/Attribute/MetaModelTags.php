@@ -334,7 +334,7 @@ class MetaModelTags extends AbstractTags
                 ->orderBy('FIELD(t.' . $alias . ',:values)')
                 ->execute();
 
-            $valueIds = $result->fetchAll(\PDO::FETCH_COLUMN);
+            $valueIds = $result->fetchFirstColumn();
 
             if (empty($valueIds)) {
                 throw new \RuntimeException('Could not translate value ' . \var_export($varValue, true));
@@ -386,7 +386,7 @@ class MetaModelTags extends AbstractTags
         }
 
         $counts = $builder->execute();
-        foreach ($counts->fetchAll(\PDO::FETCH_ASSOC) as $count) {
+        foreach ($counts->fetchAssociative() as $count) {
             $amountArray[$count['value_id']] = $count['amount'];
         }
     }
@@ -615,7 +615,7 @@ class MetaModelTags extends AbstractTags
             ->setParameter('attId', $this->get('id'))
             ->orderBy('t.value_sorting')
             ->execute()
-            ->fetchAll(\PDO::FETCH_ASSOC);
+            ->fetchAllAssociative();
 
         $valueIds     = [];
         $referenceIds = [];

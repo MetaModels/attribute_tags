@@ -497,7 +497,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
             ->execute();
 
         $existingTagIds = [];
-        while ($tag = $existingTagQuery->fetch(\PDO::FETCH_ASSOC)) {
+        while ($tag = $existingTagQuery->fetchAssociative()) {
             $existingTagIds[$tag['item_id']][] = $tag['value_id'];
         }
 

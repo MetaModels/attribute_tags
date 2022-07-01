@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2021 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,7 +20,7 @@
  * @author     Patrick Heller <ph@wacg.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2021 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -136,7 +136,7 @@ class FilterRuleTags extends FilterRule
                         ->orWhere('t.' . $strColNameAlias . ' LIKE :value_' . $index)
                         ->setParameter('value_' . $index, $value);
                 }
-                $arrValues = $builder->execute()->fetchAll(\PDO::FETCH_COLUMN);
+                $arrValues = $builder->execute()->fetchFirstColumn();
             } else {
                 $arrValues = \array_map('intval', $arrValues);
             }
@@ -181,7 +181,7 @@ class FilterRuleTags extends FilterRule
             ->andWhere('t.value_id IN (:values)')
             ->setParameter('values', $arrValues, Connection::PARAM_STR_ARRAY)
             ->execute()
-            ->fetchAll(\PDO::FETCH_COLUMN);
+            ->fetchFirstColumn();
     }
 
     /**

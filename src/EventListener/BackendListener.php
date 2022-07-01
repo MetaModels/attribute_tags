@@ -37,12 +37,12 @@ use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\PropertyInterface;
 use ContaoCommunityAlliance\DcGeneral\Factory\Event\BuildDataDefinitionEvent;
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use MetaModels\Attribute\IInternal;
 use MetaModels\DcGeneral\DataDefinition\Palette\Condition\Property\ConditionTableNameIsMetaModel;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
 use MetaModels\IFactory;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Handle events for tl_metamodel_attribute for tag attributes.
@@ -143,15 +143,15 @@ class BackendListener
             }
         }
 
-        if (\is_array($result[$translated])) {
+        if (isset($result[$translated]) && \is_array($result[$translated])) {
             \asort($result[$translated]);
         }
 
-        if (\is_array($result[$untranslated])) {
+        if (isset($result[$untranslated]) && \is_array($result[$untranslated])) {
             \asort($result[$untranslated]);
         }
 
-        if (\is_array($result[$sqlTable])) {
+        if (isset($result[$sqlTable]) && \is_array($result[$sqlTable])) {
             \asort($result[$sqlTable]);
         }
 
@@ -194,7 +194,7 @@ class BackendListener
 
         $result = $this->getColumnNamesFromTable(
             $event->getModel()->getProperty('tag_table'),
-            [Type::INTEGER, Type::BIGINT, Type::SMALLINT]
+            [Types::INTEGER, Types::BIGINT, Types::SMALLINT]
         );
 
         $event->setOptions($result);

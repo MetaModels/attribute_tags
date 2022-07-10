@@ -312,6 +312,7 @@ class MetaModelTags extends AbstractTags
                 } else {
                     $ids = $attribute->searchFor($value);
                 }
+
                 // If all match, return all.
                 if (null === $ids) {
                     $valueIds = $model->getIdsFromFilter($model->getEmptyFilter(), $alias);
@@ -332,7 +333,7 @@ class MetaModelTags extends AbstractTags
                 ->where('t.' . $alias . ' IN (:values)')
                 ->setParameter('values', $varValue, Connection::PARAM_STR_ARRAY)
                 ->orderBy('FIELD(t.' . $alias . ',:values)')
-                ->execute();
+                ->executeQuery();
 
             $valueIds = $result->fetchFirstColumn();
 
@@ -385,8 +386,8 @@ class MetaModelTags extends AbstractTags
             }
         }
 
-        $counts = $builder->execute();
-        foreach ($counts->fetchAssociative() as $count) {
+        $counts = $builder->executeQuery();
+        foreach ($counts->fetchAllAssociative() as $count) {
             $amountArray[$count['value_id']] = $count['amount'];
         }
     }
@@ -614,7 +615,7 @@ class MetaModelTags extends AbstractTags
             ->andWhere('t.att_id=:attId')
             ->setParameter('attId', $this->get('id'))
             ->orderBy('t.value_sorting')
-            ->execute()
+            ->executeQuery()
             ->fetchAllAssociative();
 
         $valueIds     = [];

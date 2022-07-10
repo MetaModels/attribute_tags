@@ -217,13 +217,18 @@ class BackendListener
         if (null === $metaModel = $this->factory->getMetaModel($model->getProperty('tag_table'))) {
             return;
         }
+
         $filters = $this->connection->createQueryBuilder()
             ->select('t.id', 't.name')
             ->from('tl_metamodel_filter', 't')
             ->where('t.pid=:pid')
             ->setParameter('pid', $metaModel->get('id'))
             ->orderBy('t.name')
-            ->execute();
+            ->executeQuery();
+
+        if(false === $filters->fetchAssociative()) {
+            return;
+        }
 
         $result = [];
         foreach ($filters->fetchAssociative() as $filter) {

@@ -646,9 +646,27 @@ class MetaModelTags extends AbstractTags
             return null;
         }
 
+        $aliasColumn  = $this->getAliasColumn();
+        $relatedModel = $this->getTagMetaModel();
+
+        // Check first, if alias column a system column.
+        if (!$relatedModel->hasAttribute($aliasColumn)) {
+            $result = $this
+                ->getConnection()
+                ->createQueryBuilder()
+                ->select('t.id')
+                ->from($this->getTagSource(), 't')
+                ->where('t.' . $aliasColumn . '=:value')
+                ->setParameter('value', $alias)
+                ->setFirstResult(0)
+                ->setMaxResults(1)
+                ->execute();
+            $idValue = $result->fetchOne();
+
+            return ($idValue === false) ? null : (string) $idValue;
+        }
+
         // Check if the current MM has translations.
-        $aliasColumn        = $this->getAliasColumn();
-        $relatedModel       = $this->getTagMetaModel();
         $currentLanguage    = null;
         $supportedLanguages = null;
 

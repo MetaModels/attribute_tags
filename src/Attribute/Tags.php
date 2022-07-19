@@ -29,8 +29,8 @@ namespace MetaModels\AttributeTagsBundle\Attribute;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver\Exception as DbalDriverException;
-use Doctrine\DBAL\Driver\ResultStatement;
 use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\Result;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -190,9 +190,9 @@ class Tags extends AbstractTags
      * @param array|null $idList   The value id list.
      * @param bool       $usedOnly The flag if only used values shall be returned.
      *
-     * @return ResultStatement
+     * @return Result
      */
-    private function getOptionStatement(?array $idList, bool $usedOnly): ResultStatement
+    private function getOptionStatement(?array $idList, bool $usedOnly): Result
     {
         $idColumn = $this->getIdColumn();
         $builder  = $this->getConnection()->createQueryBuilder();
@@ -229,13 +229,13 @@ class Tags extends AbstractTags
             $builder->andWhere($additionalWhere);
         }
 
-        return $builder->execute();
+        return $builder->executeQuery();
     }
 
     /**
      * Convert the database result into a proper result array.
      *
-     * @param ResultStatement $statement   The database result statement.
+     * @param Result          $statement   The database result statement.
      * @param string          $aliasColumn The name of the alias column to be used.
      * @param string          $valueColumn The name of the value column.
      * @param array|null      $count       The optional count array.
@@ -243,7 +243,7 @@ class Tags extends AbstractTags
      * @return array
      */
     private function convertOptionsList(
-        ResultStatement $statement,
+        Result $statement,
         string $aliasColumn,
         string $valueColumn,
         ?array &$count = null

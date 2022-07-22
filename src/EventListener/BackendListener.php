@@ -218,11 +218,11 @@ class BackendListener
             return;
         }
         $filters = $this->connection->createQueryBuilder()
-            ->select('id', 'name')
-            ->from('tl_metamodel_filter')
-            ->where('pid=:pid')
+            ->select('t.id', 't.name')
+            ->from('tl_metamodel_filter', 't')
+            ->where('t.pid=:pid')
             ->setParameter('pid', $metaModel->get('id'))
-            ->orderBy('name')
+            ->orderBy('t.name')
             ->execute();
 
         $result = [];
@@ -325,10 +325,13 @@ class BackendListener
 
         if ($where) {
             $query = $this->connection->createQueryBuilder()
-                ->select($values->getPropertyValue('tag_table') . '.*')
-                ->from($values->getPropertyValue('tag_table'))
+                ->select('t.*')
+                ->from($values->getPropertyValue('tag_table'), 't')
                 ->where($where)
-                ->orderBy($values->getPropertyValue('tag_sorting') ?: $values->getPropertyValue('tag_id'));
+                ->orderBy(
+                    't.'
+                    . ($values->getPropertyValue('tag_sorting') ?: $values->getPropertyValue('tag_id'))
+                );
 
             try {
                 $query->execute();
@@ -488,9 +491,9 @@ class BackendListener
                         $condition = new PropertyConditionChain(
                             [
                                 new PropertyConditionChain([
-                                    new PropertyValueCondition('type', 'tags'),
-                                    new ConditionTableNameIsMetaModel('tag_table', $mask)
-                                ])
+                                                               new PropertyValueCondition('type', 'tags'),
+                                                               new ConditionTableNameIsMetaModel('tag_table', $mask)
+                                                           ])
                             ],
                             ConditionChainInterface::OR_CONJUNCTION
                         );
@@ -550,6 +553,6 @@ class BackendListener
         }
 
         return ('tl_metamodel_attribute' === $event->getEnvironment()->getDataDefinition()->getName())
-            && \in_array($event->getPropertyName(), $fields);
+               && \in_array($event->getPropertyName(), $fields);
     }
 }

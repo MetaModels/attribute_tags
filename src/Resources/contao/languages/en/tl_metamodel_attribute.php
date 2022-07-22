@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2018 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,7 @@
  * @author     Christian de la Haye <service@delahaye.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2018 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -38,7 +38,7 @@ $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sorting'][0]      = 'Tag sort
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_sorting'][1]      = 'Please select a entry for the tag sorting.';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_where'][0]        = 'SQL';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_where'][1]        =
-    'The list of options can be limited by using SQL.';
+    'The list of options can be limited by using SQL as WHERE condition - use the alias \'t\' for the source table.';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_filter'][0]       = 'Filter';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_filter'][1]       = 'Here you can choose the filter to use.';
 $GLOBALS['TL_LANG']['tl_metamodel_attribute']['tag_filterparams'][0] = 'Filter parameters';

@@ -151,14 +151,14 @@ class Tags extends AbstractTags
         $itemIdColumn = $this->getMetaModel()->getTableName() . '_id';
 
         $builder = $this->getConnection()->createQueryBuilder()
-            ->select('v.*')
+            ->select('t.*')
             ->addSelect('r.item_id AS ' . $itemIdColumn)
-            ->from($strTableName, 'v')
+            ->from($strTableName, 't')
             ->leftJoin(
-                'v',
+                't',
                 'tl_metamodel_tag_relation',
                 'r',
-                '(r.att_id=:attId) AND (r.value_id=v.' . $strColNameId . ')'
+                '(r.att_id=:attId) AND (r.value_id=t.' . $strColNameId . ')'
             )
             ->setParameter('attId', $this->get('id'))
             ->where('r.item_id IN (:itemIds)')
@@ -193,18 +193,18 @@ class Tags extends AbstractTags
         $builder  = $this->getConnection()->createQueryBuilder();
         $builder
             ->setParameter('attId', $this->get('id'))
-            ->from($this->getTagSource(), 'v')
+            ->from($this->getTagSource(), 't')
             ->leftJoin(
-                'v',
+                't',
                 'tl_metamodel_tag_relation',
                 'r',
-                '(r.att_id=:attId) AND (r.value_id=v.' . $idColumn . ')'
+                '(r.att_id=:attId) AND (r.value_id=t.' . $idColumn . ')'
             )
-            ->groupBy('v.' . $idColumn)
-            ->orderBy('v.' . $this->getSortingColumn());
+            ->groupBy('t.' . $idColumn)
+            ->orderBy('t.' . $this->getSortingColumn());
 
         if ($usedOnly) {
-            $builder->select('COUNT(v.' . $idColumn . ') AS mm_count');
+            $builder->select('COUNT(t.' . $idColumn . ') AS mm_count');
             if (!empty($idList)) {
                 $builder
                     ->where('r.item_id IN (:valueIds)')
@@ -214,11 +214,11 @@ class Tags extends AbstractTags
             $builder->select('COUNT(r.value_id) AS mm_count');
             if (!empty($idList)) {
                 $builder
-                    ->where('v.' . $idColumn . ' IN (:valueIds)')
+                    ->where('t.' . $idColumn . ' IN (:valueIds)')
                     ->setParameter('valueIds', $idList, Connection::PARAM_STR_ARRAY);
             }
         }
-        $builder->addSelect('v.*');
+        $builder->addSelect('t.*');
 
         if ($additionalWhere = $this->getWhereColumn()) {
             $builder->andWhere($additionalWhere);
@@ -296,9 +296,9 @@ class Tags extends AbstractTags
 
         try {
             $builder = $this->getConnection()->createQueryBuilder()
-                ->select('sourceTable.' . $returnColumn)
-                ->from($strTableNameId, 'sourceTable')
-                ->where('sourceTable.' . $searchColumn . ' = :search')
+                ->select('t.' . $returnColumn)
+                ->from($strTableNameId, 't')
+                ->where('t.' . $searchColumn . ' = :search')
                 ->setMaxResults(1)
                 ->setParameter('search', $search)
                 ->execute();

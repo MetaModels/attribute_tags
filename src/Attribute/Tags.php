@@ -89,10 +89,10 @@ class Tags extends AbstractTags
             ->where('t.' . $alias . ' IN (:aliases)')
             ->setParameter('aliases', $varValue, Connection::PARAM_STR_ARRAY)
             ->orderBy('t.' . $this->getSortingColumn())
-            ->execute();
+            ->executeQuery();
 
         $result = [];
-        foreach ($values->fetchAssociative() as $value) {
+        foreach ($values->fetchAllAssociative() as $value) {
             // Adding the sorting from widget.
             $result[$value[$idname]]                      = $value;
             $result[$value[$idname]]['tag_value_sorting'] = \array_search($value[$alias], $varValue);

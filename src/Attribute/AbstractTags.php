@@ -428,7 +428,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
                 ->setParameter('attId', $this->get('id'))
                 ->setParameter('itemId', $itemId)
                 ->setParameter('valueIds', $valuesToRemove, Connection::PARAM_STR_ARRAY)
-                ->execute();
+                ->executeQuery();
         }
 
         // Second pass, add all new values in a row.
@@ -465,7 +465,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
                 $query
                     ->setParameter('sorting', (int) $tags[$valueId]['tag_value_sorting'])
                     ->setParameter('valueId', $valueId)
-                    ->execute();
+                    ->executeQuery();
             }
         }
 
@@ -494,7 +494,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
             ->where('t.att_id=:attId')->setParameter('attId', $this->get('id'))
             ->andWhere('t.item_id IN (:valueIds)')->setParameter('valueIds', $itemIds, Connection::PARAM_STR_ARRAY)
             ->orderBy('t.item_id', 'ASC')
-            ->execute();
+            ->executeQuery();
 
         $existingTagIds = [];
         while ($tag = $existingTagQuery->fetchAssociative()) {
@@ -528,7 +528,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
                     ->setParameter('itemId', $value['itemId'])
                     ->setParameter('sorting', $value['sorting'])
                     ->setParameter('valueId', $value['valueId'])
-                    ->execute();
+                    ->executeQuery();
             }
         }
     }
@@ -557,6 +557,6 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
             ->andWhere('tl_metamodel_tag_relation.item_id IN (:itemIds)')
             ->setParameter('attId', $this->get('id'))
             ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
-            ->execute();
+            ->executeQuery();
     }
 }

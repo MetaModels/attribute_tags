@@ -172,6 +172,10 @@ class Tags extends AbstractTags
         $statement = $builder->execute();
 
         $result = [];
+        if ($builder->rowCount() == 0) {
+            return $result;
+        }
+
         foreach ($statement->fetchAssociative() as $value) {
             if (!isset($result[$value[$itemIdColumn]])) {
                 $result[$value[$itemIdColumn]] = [];
@@ -242,7 +246,7 @@ class Tags extends AbstractTags
      *
      * @return array
      */
-    private function convertOptionsList(
+    protected function convertOptionsList(
         Result $statement,
         string $aliasColumn,
         string $valueColumn,

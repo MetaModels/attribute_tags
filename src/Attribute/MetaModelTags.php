@@ -135,6 +135,7 @@ class MetaModelTags extends AbstractTags
         $recursionKey = $this->getMetaModel()->getTableName();
         $metaModel    = $this->getTagMetaModel();
         $filter       = $metaModel->getEmptyFilter();
+        $this->buildFilterRulesForFilterSetting($filter);
         $filter->addFilterRule(new StaticIdList($valueIds));
 
         // Prevent recursion.

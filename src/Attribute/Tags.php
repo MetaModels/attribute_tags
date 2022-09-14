@@ -163,11 +163,16 @@ class Tags extends AbstractTags
             ->setParameter('attId', $this->get('id'))
             ->where('r.item_id IN (:itemIds)')
             ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
-            ->orderBy('r.value_sorting')
-            ->execute();
+            ->orderBy('r.value_sorting');
+
+        if ($additionalWhere = $this->getWhereColumn()) {
+            $builder->andWhere($additionalWhere);
+        }
+
+        $statement = $builder->execute();
 
         $result = [];
-        foreach ($builder->fetchAll(\PDO::FETCH_ASSOC) as $value) {
+        foreach ($statement->fetchAll(\PDO::FETCH_ASSOC) as $value) {
             if (!isset($result[$value[$itemIdColumn]])) {
                 $result[$value[$itemIdColumn]] = [];
             }

@@ -169,10 +169,10 @@ class Tags extends AbstractTags
             $builder->andWhere($additionalWhere);
         }
 
-        $statement = $builder->execute();
+        $statement = $builder->executeQuery();
 
         $result = [];
-        if ($builder->rowCount() == 0) {
+        if ($statement->rowCount() == 0) {
             return $result;
         }
 

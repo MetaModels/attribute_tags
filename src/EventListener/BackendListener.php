@@ -226,12 +226,12 @@ class BackendListener
             ->orderBy('t.name')
             ->executeQuery();
 
-        if(false === $filters->fetchAssociative()) {
+        if(false === ($filterItems = $filters->fetchAllAssociative())) {
             return;
         }
 
         $result = [];
-        foreach ($filters->fetchAssociative() as $filter) {
+        foreach ($filterItems as $filter) {
             $result[$filter['id']] = $filter['name'];
         }
 

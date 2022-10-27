@@ -226,7 +226,7 @@ class BackendListener
             ->orderBy('t.name')
             ->executeQuery();
 
-        if(false === ($filterItems = $filters->fetchAllAssociative())) {
+        if (false === ($filterItems = $filters->fetchAllAssociative())) {
             return;
         }
 

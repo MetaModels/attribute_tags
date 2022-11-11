@@ -312,7 +312,7 @@ class Tags extends AbstractTags
                 return null;
             }
 
-            return (string)$builder->fetchOne();
+            return (string) $builder->fetchOne();
         } catch (Exception|DbalDriverException $e) {
             return null;
         }

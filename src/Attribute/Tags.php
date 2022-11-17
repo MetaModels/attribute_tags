@@ -273,6 +273,8 @@ class Tags extends AbstractTags
 
     /**
      * {@inheritdoc}
+     *
+     * @SuppressWarnings(PMD.ShortVariable)
      */
     public function getAliasForId(string $id, string $language): ?string
     {

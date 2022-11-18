@@ -15,7 +15,7 @@
     {
       "name": "Christian Schiffler",
       "email": "c.schiffler@cyberspectrum.de",
-      "homepage": "httpS://www.cyberspectrum.de",
+      "homepage": "https://www.cyberspectrum.de",
       "role": "Developer"
     },
     {
@@ -64,6 +64,10 @@
     }
   },
   "config": {
+    "allow-plugins": {
+      "contao-components/installer": false,
+      "contao/manager-plugin": false
+    },
     "sort-packages": true
   }
 }

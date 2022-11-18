@@ -39,6 +39,8 @@ use MetaModels\ITranslatedMetaModel;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class MetaModelTags extends AbstractTags
 {
@@ -641,6 +643,10 @@ class MetaModelTags extends AbstractTags
 
     /**
      * {@inheritdoc}
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function getIdForAlias(string $alias, string $language): ?string
     {
@@ -653,7 +659,7 @@ class MetaModelTags extends AbstractTags
 
         // Check first, if alias column a system column.
         if (!$relatedModel->hasAttribute($aliasColumn)) {
-            $result = $this
+            $result  = $this
                 ->getConnection()
                 ->createQueryBuilder()
                 ->select('t.id')
@@ -678,7 +684,7 @@ class MetaModelTags extends AbstractTags
         } elseif ($relatedModel->isTranslated(false)) {
             $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
             $supportedLanguages = $relatedModel->getAvailableLanguages();
-            $fallbackLanguage   = $relatedModel->getFallbackLanguage() ?? $backendLanguage;
+            $fallbackLanguage   = ($relatedModel->getFallbackLanguage() ?? $backendLanguage);
         }
 
         if (\is_array($supportedLanguages) && !empty($supportedLanguages)) {
@@ -721,6 +727,11 @@ class MetaModelTags extends AbstractTags
 
     /**
      * {@inheritdoc}
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @SuppressWarnings(PHPMD.ShortVariable)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function getAliasForId(string $id, string $language): ?string
     {
@@ -741,7 +752,7 @@ class MetaModelTags extends AbstractTags
         } elseif ($relatedModel->isTranslated(false)) {
             $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
             $supportedLanguages = $relatedModel->getAvailableLanguages();
-            $fallbackLanguage   = $relatedModel->getFallbackLanguage() ?? $backendLanguage;
+            $fallbackLanguage   = ($relatedModel->getFallbackLanguage() ?? $backendLanguage);
         }
 
         if (\is_array($supportedLanguages) && !empty($supportedLanguages)) {
@@ -774,6 +785,6 @@ class MetaModelTags extends AbstractTags
             }
         }
 
-        return $item->parseAttribute($aliasColumn)['text'] ?? null;
+        return ($item->parseAttribute($aliasColumn)['text'] ?? null);
     }
 }

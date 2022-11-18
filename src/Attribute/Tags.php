@@ -277,6 +277,8 @@ class Tags extends AbstractTags
 
     /**
      * {@inheritdoc}
+     *
+     * @SuppressWarnings(PMD.ShortVariable)
      */
     public function getAliasForId(string $id, string $language): ?string
     {
@@ -316,7 +318,7 @@ class Tags extends AbstractTags
                 return null;
             }
 
-            return (string)$builder->fetchOne();
+            return (string) $builder->fetchOne();
         } catch (Exception|DbalDriverException $e) {
             return null;
         }

@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,7 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -26,6 +26,7 @@ namespace MetaModels\AttributeTagsBundle\Attribute;
 use Contao\System;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\BaseComplex;
+use MetaModels\Attribute\IAliasConverter;
 use MetaModels\AttributeTagsBundle\FilterRule\FilterRuleTags;
 use MetaModels\IMetaModel;
 use MetaModels\Render\Template;
@@ -33,7 +34,7 @@ use MetaModels\Render\Template;
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
  */
-abstract class AbstractTags extends BaseComplex
+abstract class AbstractTags extends BaseComplex implements IAliasConverter
 {
     /**
      * The widget mode to use.
@@ -246,10 +247,10 @@ abstract class AbstractTags extends BaseComplex
     protected function checkConfiguration()
     {
         return $this->getTagSource()
-            && $this->getValueColumn()
-            && $this->getAliasColumn()
-            && $this->getIdColumn()
-            && $this->getSortingColumn();
+               && $this->getValueColumn()
+               && $this->getAliasColumn()
+               && $this->getIdColumn()
+               && $this->getSortingColumn();
     }
 
     /**
@@ -317,6 +318,15 @@ abstract class AbstractTags extends BaseComplex
 
         return $sourceName === 'tl_page' ? 'pageTree' : 'fileTree';
     }
+
+    /**
+     * Obtain the filter options with always the id being contained instead of the alias.
+     *
+     * This is being called from BackendSubscriber to circumvent problems when dealing with translated aliases.
+     *
+     * @return array
+     */
+    abstract public function getFilterOptionsForDcGeneral(): array;
 
     /**
      * {@inheritdoc}
@@ -412,9 +422,9 @@ abstract class AbstractTags extends BaseComplex
             $this->connection
                 ->createQueryBuilder()
                 ->delete('tl_metamodel_tag_relation')
-                ->where('att_id=:attId')
-                ->andWhere('item_id=:itemId')
-                ->andWhere('value_id IN (:valueIds)')
+                ->where('tl_metamodel_tag_relation.att_id=:attId')
+                ->andWhere('tl_metamodel_tag_relation.item_id=:itemId')
+                ->andWhere('tl_metamodel_tag_relation.value_id IN (:valueIds)')
                 ->setParameter('attId', $this->get('id'))
                 ->setParameter('itemId', $itemId)
                 ->setParameter('valueIds', $valuesToRemove, Connection::PARAM_STR_ARRAY)
@@ -440,11 +450,11 @@ abstract class AbstractTags extends BaseComplex
         if ($valuesToUpdate) {
             $query = $this->connection
                 ->createQueryBuilder()
-                ->update('tl_metamodel_tag_relation')
-                ->set('value_sorting', ':sorting')
-                ->where('att_id=:attId')
-                ->andWhere('item_id=:itemId')
-                ->andWhere('value_id=:valueId')
+                ->update('tl_metamodel_tag_relation', 't')
+                ->set('t.value_sorting', ':sorting')
+                ->where('t.att_id=:attId')
+                ->andWhere('t.item_id=:itemId')
+                ->andWhere('t.value_id=:valueId')
                 ->setParameter('attId', $this->get('id'))
                 ->setParameter('itemId', $itemId);
 
@@ -480,10 +490,10 @@ abstract class AbstractTags extends BaseComplex
             ->connection
             ->createQueryBuilder()
             ->select('*')
-            ->from('tl_metamodel_tag_relation')
-            ->where('att_id=:attId')->setParameter('attId', $this->get('id'))
-            ->andWhere('item_id IN (:valueIds)')->setParameter('valueIds', $itemIds, Connection::PARAM_STR_ARRAY)
-            ->orderBy('item_id', 'ASC')
+            ->from('tl_metamodel_tag_relation', 't')
+            ->where('t.att_id=:attId')->setParameter('attId', $this->get('id'))
+            ->andWhere('t.item_id IN (:valueIds)')->setParameter('valueIds', $itemIds, Connection::PARAM_STR_ARRAY)
+            ->orderBy('t.item_id', 'ASC')
             ->execute();
 
         $existingTagIds = [];
@@ -504,13 +514,13 @@ abstract class AbstractTags extends BaseComplex
             $builder = $this
                 ->connection
                 ->createQueryBuilder()
-                    ->insert('tl_metamodel_tag_relation')
-                    ->values([
-                        'att_id'        => ':attId',
-                        'item_id'       => ':itemId',
-                        'value_sorting' => ':sorting',
-                        'value_id'      => ':valueId',
-                    ]);
+                ->insert('tl_metamodel_tag_relation')
+                ->values([
+                             'tl_metamodel_tag_relation.att_id'        => ':attId',
+                             'tl_metamodel_tag_relation.item_id'       => ':itemId',
+                             'tl_metamodel_tag_relation.value_sorting' => ':sorting',
+                             'tl_metamodel_tag_relation.value_id'      => ':valueId',
+                         ]);
 
             foreach ($insertValues as $value) {
                 $builder
@@ -543,8 +553,8 @@ abstract class AbstractTags extends BaseComplex
         $this->connection
             ->createQueryBuilder()
             ->delete('tl_metamodel_tag_relation')
-            ->where('att_id=:attId')
-            ->andWhere('item_id IN (:itemIds)')
+            ->where('tl_metamodel_tag_relation.att_id=:attId')
+            ->andWhere('tl_metamodel_tag_relation.item_id IN (:itemIds)')
             ->setParameter('attId', $this->get('id'))
             ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
             ->execute();

@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,7 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -26,6 +26,7 @@ namespace MetaModels\AttributeTagsBundle\Attribute;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\ITranslated;
 use MetaModels\Filter\IFilter;
+use MetaModels\Filter\Rules\SearchAttribute;
 use MetaModels\Filter\Rules\SimpleQuery;
 use MetaModels\Filter\Rules\StaticIdList;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
@@ -34,9 +35,12 @@ use MetaModels\IItem;
 use MetaModels\IItems;
 use MetaModels\IMetaModel;
 use MetaModels\Items;
+use MetaModels\ITranslatedMetaModel;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class MetaModelTags extends AbstractTags
 {
@@ -72,7 +76,7 @@ class MetaModelTags extends AbstractTags
      * Note that you should not use this directly but use the factory classes to instantiate attributes.
      *
      * @param IMetaModel            $objMetaModel         The MetaModel instance this attribute belongs to.
-     * @param array $arrData                              The information array, for attribute information, refer
+     * @param array                 $arrData              The information array, for attribute information, refer
      *                                                    to documentation of table tl_metamodel_attribute and
      *                                                    documentation of the certain attribute classes for
      *                                                    information what values are understood.
@@ -99,7 +103,7 @@ class MetaModelTags extends AbstractTags
     protected function checkConfiguration()
     {
         return parent::checkConfiguration()
-            && (null !== $this->getTagMetaModel());
+               && (null !== $this->getTagMetaModel());
     }
 
     /**
@@ -133,6 +137,7 @@ class MetaModelTags extends AbstractTags
         $recursionKey = $this->getMetaModel()->getTableName();
         $metaModel    = $this->getTagMetaModel();
         $filter       = $metaModel->getEmptyFilter();
+        $this->buildFilterRulesForFilterSetting($filter);
         $filter->addFilterRule(new StaticIdList($valueIds));
 
         // Prevent recursion.
@@ -221,7 +226,7 @@ class MetaModelTags extends AbstractTags
         if ($this->isCheckboxWizard() || $this->isTreePicker()) {
             // Keep order from input array, and add non existent ids to the end.
             return $sorting[$cacheKey] = \array_merge(
-                // Keep order from input array...
+            // Keep order from input array...
                 \array_intersect($idList, $itemIds),
                 // ... and add non existent ids to the end.
                 \array_diff($idList, $itemIds)
@@ -271,11 +276,14 @@ class MetaModelTags extends AbstractTags
         $aliasColumn = $this->getAliasColumn();
         $alias       = [];
         foreach ($varValue as $valueId => $value) {
-            if (array_key_exists($aliasColumn, $value)) {
+            if (!\is_array($value)) {
+                continue;
+            }
+            if (\array_key_exists($aliasColumn, $value)) {
                 $alias[$valueId] = $value[$aliasColumn];
                 continue;
             }
-            if (array_key_exists(self::TAGS_RAW, $value) && array_key_exists($aliasColumn, $value[self::TAGS_RAW])) {
+            if (\array_key_exists(self::TAGS_RAW, $value) && \array_key_exists($aliasColumn, $value[self::TAGS_RAW])) {
                 $alias[$valueId] = $value[self::TAGS_RAW][$aliasColumn];
             }
         }
@@ -321,11 +329,11 @@ class MetaModelTags extends AbstractTags
             $result = $this
                 ->getConnection()
                 ->createQueryBuilder()
-                ->select('id')
-                ->from($this->getTagSource())
-                ->where($alias . ' IN (:values)')
+                ->select('t.id')
+                ->from($this->getTagSource(), 't')
+                ->where('t.' . $alias . ' IN (:values)')
                 ->setParameter('values', $varValue, Connection::PARAM_STR_ARRAY)
-                ->orderBy('FIELD(' . $alias . ',:values)')
+                ->orderBy('FIELD(t.' . $alias . ',:values)')
                 ->execute();
 
             $valueIds = $result->fetchAll(\PDO::FETCH_COLUMN);
@@ -357,12 +365,12 @@ class MetaModelTags extends AbstractTags
         $builder = $this
             ->getConnection()
             ->createQueryBuilder()
-            ->select('value_id')
-            ->addSelect('COUNT(item_id) AS amount')
-            ->from('tl_metamodel_tag_relation')
-            ->where('att_id=:attId')
+            ->select('t.value_id')
+            ->addSelect('COUNT(t.item_id) AS amount')
+            ->from('tl_metamodel_tag_relation', 't')
+            ->where('t.att_id=:attId')
             ->setParameter('attId', $this->get('id'))
-            ->groupBy('value_id');
+            ->groupBy('t.value_id');
 
         if (0 < $items->getCount()) {
             $ids = [];
@@ -370,11 +378,11 @@ class MetaModelTags extends AbstractTags
                 $ids[] = $item->get('id');
             }
             $builder
-                ->andWhere('value_id IN (:valueIds)')
+                ->andWhere('t.value_id IN (:valueIds)')
                 ->setParameter('valueIds', $ids, Connection::PARAM_STR_ARRAY);
             if ($idList && \is_array($idList)) {
                 $builder
-                    ->andWhere('item_id IN (:itemIds)')
+                    ->andWhere('t.item_id IN (:itemIds)')
                     ->setParameter('itemIds', $idList, Connection::PARAM_STR_ARRAY);
             }
         }
@@ -428,6 +436,44 @@ class MetaModelTags extends AbstractTags
             $this->getAliasColumn(),
             $arrCount
         );
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @SuppressWarnings(PHPMD.CamelCaseVariableName)
+     */
+    public function getFilterOptionsForDcGeneral(): array
+    {
+        if (!$this->isFilterOptionRetrievingPossible(null)) {
+            return [];
+        }
+
+        $metaModel = $this->getTagMetaModel();
+        if (!$metaModel instanceof ITranslatedMetaModel) {
+            $originalLanguage       = $GLOBALS['TL_LANGUAGE'];
+            $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $this->getMetaModel()->getActiveLanguage());
+        }
+
+        $filter = $this->getTagMetaModel()->getEmptyFilter();
+
+        $this->buildFilterRulesForFilterSetting($filter);
+
+        $objItems = $this->getTagMetaModel()->findByFilter(
+            $filter,
+            $this->getSortingColumn(),
+            0,
+            0,
+            $this->getSortDirection(),
+            [$this->getAliasColumn(), $this->getValueColumn()]
+        );
+
+        if (isset($originalLanguage)) {
+            $GLOBALS['TL_LANGUAGE'] = $originalLanguage;
+        }
+
+        return $this->convertItemsToFilterOptions($objItems, $this->getValueColumn(), $this->getAliasColumn());
     }
 
     /**
@@ -496,15 +542,15 @@ class MetaModelTags extends AbstractTags
         $result = $this
             ->getConnection()
             ->createQueryBuilder()
-            ->select('value_id AS id')
-            ->from('tl_metamodel_tag_relation')
-            ->where('att_id=:attId')
-            ->groupBy('value_id')
+            ->select('t.value_id AS id')
+            ->from('tl_metamodel_tag_relation', 't')
+            ->where('t.att_id=:attId')
+            ->groupBy('t.value_id')
             ->setParameter('attId', $this->get('id'));
 
         if (!empty($idList)) {
             $result
-                ->andWhere('item_id IN (:itemIds)')
+                ->andWhere('t.item_id IN (:itemIds)')
                 ->setParameter('itemIds', $idList, Connection::PARAM_STR_ARRAY);
         }
 
@@ -562,14 +608,14 @@ class MetaModelTags extends AbstractTags
         $rows = $this
             ->getConnection()
             ->createQueryBuilder()
-            ->select('item_id AS id')
-            ->addSelect('value_id AS value')
-            ->from('tl_metamodel_tag_relation')
-            ->where('item_id IN (:itemIds)')
+            ->select('t.item_id AS id')
+            ->addSelect('t.value_id AS value')
+            ->from('tl_metamodel_tag_relation', 't')
+            ->where('t.item_id IN (:itemIds)')
             ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
-            ->andWhere('att_id=:attId')
+            ->andWhere('t.att_id=:attId')
             ->setParameter('attId', $this->get('id'))
-            ->orderBy('value_sorting')
+            ->orderBy('t.value_sorting')
             ->execute()
             ->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -584,10 +630,160 @@ class MetaModelTags extends AbstractTags
         $result = [];
         foreach ($valueIds as $itemId => $tagIds) {
             foreach ($tagIds as $tagId) {
-                $result[$itemId][$tagId] = $values[$tagId];
+                // Value might have been deleted in referenced table and therefore return null here.
+                if (null !== $value = $values[$tagId]) {
+                    $result[$itemId][$tagId] = $value;
+                }
             }
         }
 
         return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     */
+    public function getIdForAlias(string $alias, string $language): ?string
+    {
+        if (!$this->isProperlyConfigured()) {
+            return null;
+        }
+
+        $aliasColumn  = $this->getAliasColumn();
+        $relatedModel = $this->getTagMetaModel();
+
+        // Check first, if alias column a system column.
+        if (!$relatedModel->hasAttribute($aliasColumn)) {
+            $result  = $this
+                ->getConnection()
+                ->createQueryBuilder()
+                ->select('t.id')
+                ->from($this->getTagSource(), 't')
+                ->where('t.' . $aliasColumn . '=:value')
+                ->setParameter('value', $alias)
+                ->setFirstResult(0)
+                ->setMaxResults(1)
+                ->execute();
+            $idValue = $result->fetchOne();
+
+            return ($idValue === false) ? null : (string) $idValue;
+        }
+
+        // Check if the current MM has translations.
+        $currentLanguage    = null;
+        $supportedLanguages = null;
+
+        if ($relatedModel instanceof ITranslatedMetaModel) {
+            $supportedLanguages = $relatedModel->getLanguages();
+            $fallbackLanguage   = $relatedModel->getMainLanguage();
+        } elseif ($relatedModel->isTranslated(false)) {
+            $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
+            $supportedLanguages = $relatedModel->getAvailableLanguages();
+            $fallbackLanguage   = ($relatedModel->getFallbackLanguage() ?? $backendLanguage);
+        }
+
+        if (\is_array($supportedLanguages) && !empty($supportedLanguages)) {
+            if (\in_array($language, $supportedLanguages, false)) {
+                $currentLanguage = $language;
+            } else {
+                $currentLanguage = $fallbackLanguage;
+            }
+        }
+
+        // Retrieve original language only if target language is set.
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($language);
+            } elseif ($relatedModel->isTranslated(false)) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
+            }
+        }
+
+        // Find the alias in the related metamodels, if there is no found return null.
+        // On more than one result return the first one.
+        $filter = $relatedModel->getEmptyFilter();
+        $filter->addFilterRule(new SearchAttribute($relatedModel->getAttribute($aliasColumn), $alias));
+        $items = $relatedModel->findByFilter($filter);
+
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($currentLanguage);
+            } elseif ($relatedModel->isTranslated(false)) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
+            }
+        }
+
+        if ($items->getCount() == 0) {
+            return null;
+        }
+
+        return $items->first()->current()->get('id');
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @SuppressWarnings(PHPMD.ShortVariable)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     */
+    public function getAliasForId(string $id, string $language): ?string
+    {
+        if (!$this->isProperlyConfigured()) {
+            return null;
+        }
+
+        // Check if the current MM has translations.
+        $aliasColumn        = $this->getAliasColumn();
+        $relatedModel       = $this->getTagMetaModel();
+        $currentLanguage    = null;
+        $supportedLanguages = null;
+        $fallbackLanguage   = null;
+
+        if ($relatedModel instanceof ITranslatedMetaModel) {
+            $supportedLanguages = $relatedModel->getLanguages();
+            $fallbackLanguage   = $relatedModel->getMainLanguage();
+        } elseif ($relatedModel->isTranslated(false)) {
+            $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
+            $supportedLanguages = $relatedModel->getAvailableLanguages();
+            $fallbackLanguage   = ($relatedModel->getFallbackLanguage() ?? $backendLanguage);
+        }
+
+        if (\is_array($supportedLanguages) && !empty($supportedLanguages)) {
+            if (\in_array($language, $supportedLanguages, false)) {
+                $currentLanguage = $language;
+            } else {
+                $currentLanguage = $fallbackLanguage;
+            }
+        }
+
+        // Retrieve original language only if target language is set.
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($language);
+            } elseif ($relatedModel->isTranslated(false)) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
+            }
+        }
+
+        $item = $relatedModel->findById($id, [$aliasColumn]);
+        if ($item === null) {
+            return null;
+        }
+
+        if ($currentLanguage) {
+            if ($relatedModel instanceof ITranslatedMetaModel) {
+                $relatedModel->selectLanguage($currentLanguage);
+            } elseif ($relatedModel->isTranslated(false)) {
+                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
+            }
+        }
+
+        return ($item->parseAttribute($aliasColumn)['text'] ?? null);
     }
 }

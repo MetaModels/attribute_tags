@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2021 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,7 @@
  * @package    MetaModels/attribute_tags
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2021 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -32,6 +32,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests to test class MetaModelTags.
+ *
+ * @covers \MetaModels\AttributeTagsBundle\Attribute\MetaModelTags
  */
 class MetaModelTagsTest extends TestCase
 {
@@ -193,15 +195,15 @@ class MetaModelTagsTest extends TestCase
             ->getMockBuilder(QueryBuilder::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $builder->expects($this->once())->method('select')->with('id')->willReturn($builder);
-        $builder->expects($this->once())->method('from')->with('mm_test_tags')->willReturn($builder);
-        $builder->expects($this->once())->method('where')->with('id IN (:values)')->willReturn($builder);
+        $builder->expects($this->once())->method('select')->with('t.id')->willReturn($builder);
+        $builder->expects($this->once())->method('from')->with('mm_test_tags', 't')->willReturn($builder);
+        $builder->expects($this->once())->method('where')->with('t.id IN (:values)')->willReturn($builder);
         $builder
             ->expects($this->once())
             ->method('setParameter')
             ->with('values', [10], Connection::PARAM_STR_ARRAY)
             ->willReturn($builder);
-        $builder->expects($this->once())->method('orderBy')->with('FIELD(id,:values)')->willReturn($builder);
+        $builder->expects($this->once())->method('orderBy')->with('FIELD(t.id,:values)')->willReturn($builder);
         $builder->expects($this->once())->method('execute')->willReturn($statement);
 
         $connection->expects($this->once())->method('createQueryBuilder')->willReturn($builder);

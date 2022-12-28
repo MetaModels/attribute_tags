@@ -632,9 +632,21 @@ class MetaModelTags extends AbstractTags
         foreach ($valueIds as $itemId => $tagIds) {
             foreach ($tagIds as $tagId) {
                 // Value might have been deleted in referenced table and therefore return null here.
-                if (null !== $value = $values[$tagId]) {
-                    $result[$itemId][$tagId] = $value;
+                $value = ($values[$tagId] ?? null);
+                if (null === $value) {
+                    @trigger_error(
+                        \sprintf(
+                            'Warning, skipping unknown tl_metamodel_tag_relation item value %1$s.%2$s.%3$s %4$s',
+                            $this->getMetaModel()->getTableName(),
+                            $itemId,
+                            $this->getColName(),
+                            $tagId
+                        ),
+                        E_USER_NOTICE
+                    );
+                    continue;
                 }
+                $result[$itemId][$tagId] = $value;
             }
         }
 

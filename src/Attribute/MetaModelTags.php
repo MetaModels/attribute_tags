@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2022 The MetaModels team.
+ * (c) 2012-2023 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,7 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2022 The MetaModels team.
+ * @copyright  2012-2023 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -30,6 +30,7 @@ use MetaModels\Filter\Rules\SearchAttribute;
 use MetaModels\Filter\Rules\SimpleQuery;
 use MetaModels\Filter\Rules\StaticIdList;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
+use MetaModels\Helper\LocaleUtil;
 use MetaModels\IFactory;
 use MetaModels\IItem;
 use MetaModels\IItems;
@@ -453,8 +454,9 @@ class MetaModelTags extends AbstractTags
 
         $metaModel = $this->getTagMetaModel();
         if (!$metaModel instanceof ITranslatedMetaModel) {
-            $originalLanguage       = $GLOBALS['TL_LANGUAGE'];
-            $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $this->getMetaModel()->getActiveLanguage());
+            // @deprecated usage of TL_LANGUAGE - remove for Contao 5.0.
+            $originalLanguage       = LocaleUtil::formatAsLocale($GLOBALS['TL_LANGUAGE']);
+            $GLOBALS['TL_LANGUAGE'] = LocaleUtil::formatAsLanguageTag($this->getMetaModel()->getActiveLanguage());
         }
 
         $filter = $this->getTagMetaModel()->getEmptyFilter();
@@ -471,7 +473,8 @@ class MetaModelTags extends AbstractTags
         );
 
         if (isset($originalLanguage)) {
-            $GLOBALS['TL_LANGUAGE'] = $originalLanguage;
+            // @deprecated usage of TL_LANGUAGE - remove for Contao 5.0.
+            $GLOBALS['TL_LANGUAGE'] = LocaleUtil::formatAsLanguageTag($originalLanguage);
         }
 
         return $this->convertItemsToFilterOptions($objItems, $this->getValueColumn(), $this->getAliasColumn());

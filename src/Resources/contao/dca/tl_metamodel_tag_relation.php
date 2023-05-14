@@ -26,7 +26,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_tag_relation'] = [
         'sql' => [
             'keys' => [
                 'id'                        => 'primary',
-                'att_id,item_id,value_id'   => 'index'
+                'att_id,item_id,value_id'   => 'unique'
             ]
         ]
     ],

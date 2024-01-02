@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2022 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,7 +20,7 @@
  * @author     Patrick Heller <ph@wacg.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2022 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -28,6 +28,7 @@
 namespace MetaModels\AttributeTagsBundle\FilterRule;
 
 use Contao\System;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use MetaModels\AttributeTagsBundle\Attribute\AbstractTags;
 use MetaModels\AttributeTagsBundle\Attribute\MetaModelTags;
@@ -66,7 +67,7 @@ class FilterRuleTags extends FilterRule
      *
      * @var Connection
      */
-    private $connection;
+    private Connection $connection;
 
     /**
      * Check if the reference is a MetaModel.
@@ -110,8 +111,8 @@ class FilterRuleTags extends FilterRule
             );
             // @codingStandardsIgnoreEnd
             $connection = System::getContainer()->get('database_connection');
+            assert($connection instanceof Connection);
         }
-
         $this->connection = $connection;
     }
 
@@ -136,22 +137,20 @@ class FilterRuleTags extends FilterRule
                         ->orWhere('t.' . $strColNameAlias . ' LIKE :value_' . $index)
                         ->setParameter('value_' . $index, $value);
                 }
-                $arrValues = $builder->execute()->fetchFirstColumn();
+                $arrValues = $builder->executeQuery()->fetchFirstColumn();
             } else {
                 $arrValues = \array_map('intval', $arrValues);
             }
         } else {
-            if ($strColNameAlias == 'id') {
-                return $this->flatten($arrValues);
-            }
-            $attribute = $this->getTagMetaModel()->getAttribute($strColNameAlias);
-            if (null === $attribute) {
+            if ($strColNameAlias === 'id') {
                 return $this->flatten($arrValues);
             }
 
+            $attribute = $this->getTagMetaModel()->getAttribute($strColNameAlias);
+
             $values = [];
             foreach ($arrValues as $value) {
-                $values[] = \array_values($attribute->searchFor($value));
+                $values[] = \array_values($attribute->searchFor($value) ?? []);
             }
 
             $arrValues = $this->flatten($values);
@@ -179,8 +178,8 @@ class FilterRuleTags extends FilterRule
             ->where('t.att_id=:att_id')
             ->setParameter('att_id', $this->objAttribute->get('id'))
             ->andWhere('t.value_id IN (:values)')
-            ->setParameter('values', $arrValues, Connection::PARAM_STR_ARRAY)
-            ->execute()
+            ->setParameter('values', $arrValues, ArrayParameterType::STRING)
+            ->executeQuery()
             ->fetchFirstColumn();
     }
 
@@ -194,7 +193,7 @@ class FilterRuleTags extends FilterRule
     public function flatten(array $array)
     {
         $return = [];
-        \array_walk_recursive($array, function ($item) use (&$return) {
+        \array_walk_recursive($array, static function ($item) use (&$return) {
             $return[] = $item;
         });
         return $return;

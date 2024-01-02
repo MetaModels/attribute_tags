@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2023 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,13 +16,14 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2023 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
 
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\ITranslated;
 use MetaModels\Filter\IFilter;
@@ -42,48 +43,49 @@ use MetaModels\ITranslatedMetaModel;
  * This is the MetaModelAttribute class for handling tag attributes.
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class MetaModelTags extends AbstractTags
 {
     /**
      * The key in the result array where the RAW values shall be stored.
      */
-    const TAGS_RAW = '__TAGS_RAW__';
+    private const TAGS_RAW = '__TAGS_RAW__';
 
     /**
      * The MetaModel we are referencing on.
      *
      * @var IMetaModel
      */
-    private $objSelectMetaModel;
+    private IMetaModel $objSelectMetaModel;
 
     /**
      * The factory.
      *
-     * @var IFactory
+     * @var IFactory|null
      */
-    private $factory;
+    private IFactory|null $factory;
 
     /**
      * Filter setting factory.
      *
-     * @var IFilterSettingFactory
+     * @var IFilterSettingFactory|null
      */
-    private $filterSettingFactory;
+    private IFilterSettingFactory|null $filterSettingFactory;
 
     /**
      * Instantiate an MetaModel attribute.
      *
      * Note that you should not use this directly but use the factory classes to instantiate attributes.
      *
-     * @param IMetaModel            $objMetaModel         The MetaModel instance this attribute belongs to.
-     * @param array                 $arrData              The information array, for attribute information, refer
-     *                                                    to documentation of table tl_metamodel_attribute and
-     *                                                    documentation of the certain attribute classes for
-     *                                                    information what values are understood.
-     * @param Connection            $connection           The database connection.
-     * @param IFactory              $factory              MetaModel factory.
-     * @param IFilterSettingFactory $filterSettingFactory Filter setting factory.
+     * @param IMetaModel                 $objMetaModel         The MetaModel instance this attribute belongs to.
+     * @param array                      $arrData              The information array, for attribute information, refer
+     *                                                         to documentation of table tl_metamodel_attribute and
+     *                                                         documentation of the certain attribute classes for
+     *                                                         information what values are understood.
+     * @param Connection|null            $connection           The database connection.
+     * @param IFactory|null              $factory              MetaModel factory.
+     * @param IFilterSettingFactory|null $filterSettingFactory Filter setting factory.
      */
     public function __construct(
         IMetaModel $objMetaModel,
@@ -164,7 +166,7 @@ class MetaModelTags extends AbstractTags
                 \array_values(
                     \array_filter(
                         $orderIds,
-                        function ($itemOrId) {
+                        static function ($itemOrId) {
                             return $itemOrId instanceof IItem;
                         }
                     )
@@ -197,7 +199,7 @@ class MetaModelTags extends AbstractTags
      *
      * @return array
      */
-    private function sortIdsBySortingColumn($idList)
+    private function sortIdsBySortingColumn(array $idList): array
     {
         // Only one item, what shall we sort here then?
         if (1 === \count($idList)) {
@@ -225,7 +227,7 @@ class MetaModelTags extends AbstractTags
 
         // Manual sorting of items for checkbox wizard.
         if ($this->isCheckboxWizard() || $this->isTreePicker()) {
-            // Keep order from input array, and add non existent ids to the end.
+            // Keep order from input array, and add non-existent ids to the end.
             return $sorting[$cacheKey] = \array_merge(
             // Keep order from input array...
                 \array_intersect($idList, $itemIds),
@@ -233,7 +235,7 @@ class MetaModelTags extends AbstractTags
                 \array_diff($idList, $itemIds)
             );
         }
-        // Use new order and add non existent ids to the end.
+        // Use new order and add non-existent ids to the end.
         return $sorting[$cacheKey] = \array_merge($itemIds, \array_diff($idList, $itemIds));
     }
 
@@ -251,7 +253,7 @@ class MetaModelTags extends AbstractTags
         $sortedIds = $this->sortIdsBySortingColumn(\array_keys($varValue));
         $result    = [];
         foreach ($sortedIds as $id) {
-            if (!array_key_exists($id, $alias)) {
+            if (!\array_key_exists($id, $alias)) {
                 continue;
             }
             $result[] = $alias[$id];
@@ -272,7 +274,7 @@ class MetaModelTags extends AbstractTags
      *
      * @return array
      */
-    private function convertValuesToIds($varValue): array
+    private function convertValuesToIds(array $varValue): array
     {
         $aliasColumn = $this->getAliasColumn();
         $alias       = [];
@@ -308,6 +310,7 @@ class MetaModelTags extends AbstractTags
             // It is an attribute, we may search for it.
             foreach ($varValue as $value) {
                 if ($attribute instanceof ITranslated) {
+                    /** @psalm-suppress DeprecatedMethod */
                     $ids = $attribute->searchForInLanguages(
                         $value,
                         [$model->getActiveLanguage(), $model->getFallbackLanguage()]
@@ -334,7 +337,7 @@ class MetaModelTags extends AbstractTags
                 ->select('t.id')
                 ->from($this->getTagSource(), 't')
                 ->where('t.' . $alias . ' IN (:values)')
-                ->setParameter('values', $varValue, Connection::PARAM_STR_ARRAY)
+                ->setParameter('values', $varValue, ArrayParameterType::STRING)
                 ->orderBy('FIELD(t.' . $alias . ',:values)')
                 ->executeQuery();
 
@@ -355,9 +358,7 @@ class MetaModelTags extends AbstractTags
      * Calculate the amount how often each value has been assigned.
      *
      * @param IItems $items       The item list containing the values.
-     *
      * @param array  $amountArray The target array to where the counters shall be stored to.
-     *
      * @param array  $idList      The ids of items.
      *
      * @return void
@@ -381,11 +382,11 @@ class MetaModelTags extends AbstractTags
             }
             $builder
                 ->andWhere('t.value_id IN (:valueIds)')
-                ->setParameter('valueIds', $ids, Connection::PARAM_STR_ARRAY);
+                ->setParameter('valueIds', $ids, ArrayParameterType::STRING);
             if ($idList && \is_array($idList)) {
                 $builder
                     ->andWhere('t.item_id IN (:itemIds)')
-                    ->setParameter('itemIds', $idList, Connection::PARAM_STR_ARRAY);
+                    ->setParameter('itemIds', $idList, ArrayParameterType::STRING);
             }
         }
 
@@ -416,7 +417,7 @@ class MetaModelTags extends AbstractTags
 
         // If used only or id list given, select only the options that are assigned or assigned to only these items.
         if ($usedOnly || \is_array($idList)) {
-            $this->buildFilterRulesForUsedOnly($filter, $idList ? $idList : []);
+            $this->buildFilterRulesForUsedOnly($filter, $idList ?: []);
         }
 
         $objItems = $this->getTagMetaModel()->findByFilter(
@@ -455,7 +456,8 @@ class MetaModelTags extends AbstractTags
         $metaModel = $this->getTagMetaModel();
         if (!$metaModel instanceof ITranslatedMetaModel) {
             // @deprecated usage of TL_LANGUAGE - remove for Contao 5.0.
-            $originalLanguage       = LocaleUtil::formatAsLocale($GLOBALS['TL_LANGUAGE']);
+            $originalLanguage = LocaleUtil::formatAsLocale($GLOBALS['TL_LANGUAGE']);
+            /** @psalm-suppress DeprecatedMethod */
             $GLOBALS['TL_LANGUAGE'] = LocaleUtil::formatAsLanguageTag($this->getMetaModel()->getActiveLanguage());
         }
 
@@ -536,7 +538,6 @@ class MetaModelTags extends AbstractTags
      * Fetch filter options from foreign table taking the given flag into account.
      *
      * @param IFilter $filter The filter to which the rules shall be added to.
-     *
      * @param array   $idList The list of ids of items for which the rules shall be added.
      *
      * @return void
@@ -555,7 +556,7 @@ class MetaModelTags extends AbstractTags
         if (!empty($idList)) {
             $result
                 ->andWhere('t.item_id IN (:itemIds)')
-                ->setParameter('itemIds', $idList, Connection::PARAM_STR_ARRAY);
+                ->setParameter('itemIds', $idList, ArrayParameterType::STRING);
         }
 
         $filter->addFilterRule(SimpleQuery::createFromQueryBuilder($result));
@@ -565,11 +566,8 @@ class MetaModelTags extends AbstractTags
      * Convert a collection of items into a proper filter option list.
      *
      * @param IItems|IItem[] $items        The item collection to convert.
-     *
      * @param string         $displayValue The name of the attribute to use as value.
-     *
      * @param string         $aliasColumn  The name of the attribute to use as alias.
-     *
      * @param null|string[]  $count        The counter array.
      *
      * @return array
@@ -581,12 +579,8 @@ class MetaModelTags extends AbstractTags
             $parsedDisplay = $item->parseAttribute($displayValue);
             $parsedAlias   = $item->parseAttribute($aliasColumn);
 
-            $textValue  = isset($parsedDisplay['text'])
-                ? $parsedDisplay['text']
-                : $item->get($displayValue);
-            $aliasValue = isset($parsedAlias['text'])
-                ? $parsedAlias['text']
-                : $item->get($aliasColumn);
+            $textValue  = $parsedDisplay['text'] ?? $item->get($displayValue);
+            $aliasValue = $parsedAlias['text'] ?? $item->get($aliasColumn);
 
             $result[$aliasValue] = $textValue;
 
@@ -616,7 +610,7 @@ class MetaModelTags extends AbstractTags
             ->addSelect('t.value_id AS value')
             ->from('tl_metamodel_tag_relation', 't')
             ->where('t.item_id IN (:itemIds)')
-            ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
+            ->setParameter('itemIds', $arrIds, ArrayParameterType::STRING)
             ->andWhere('t.att_id=:attId')
             ->setParameter('attId', $this->get('id'))
             ->orderBy('t.value_sorting')
@@ -683,7 +677,7 @@ class MetaModelTags extends AbstractTags
                 ->setParameter('value', $alias)
                 ->setFirstResult(0)
                 ->setMaxResults(1)
-                ->execute();
+                ->executeQuery();
             $idValue = $result->fetchOne();
 
             return ($idValue === false) ? null : (string) $idValue;
@@ -693,6 +687,10 @@ class MetaModelTags extends AbstractTags
         $currentLanguage    = null;
         $supportedLanguages = null;
 
+        /**
+         * @psalm-suppress DeprecatedMethod
+         * @psalm-suppress TooManyArguments
+         */
         if ($relatedModel instanceof ITranslatedMetaModel) {
             $supportedLanguages = $relatedModel->getLanguages();
             $fallbackLanguage   = $relatedModel->getMainLanguage();
@@ -711,6 +709,10 @@ class MetaModelTags extends AbstractTags
         }
 
         // Retrieve original language only if target language is set.
+        /**
+         * @psalm-suppress DeprecatedMethod
+         * @psalm-suppress TooManyArguments
+         */
         if ($currentLanguage) {
             if ($relatedModel instanceof ITranslatedMetaModel) {
                 $relatedModel->selectLanguage($language);
@@ -725,6 +727,10 @@ class MetaModelTags extends AbstractTags
         $filter->addFilterRule(new SearchAttribute($relatedModel->getAttribute($aliasColumn), $alias));
         $items = $relatedModel->findByFilter($filter);
 
+        /**
+         * @psalm-suppress DeprecatedMethod
+         * @psalm-suppress TooManyArguments
+         */
         if ($currentLanguage) {
             if ($relatedModel instanceof ITranslatedMetaModel) {
                 $relatedModel->selectLanguage($currentLanguage);
@@ -733,7 +739,7 @@ class MetaModelTags extends AbstractTags
             }
         }
 
-        if ($items->getCount() == 0) {
+        if ($items->getCount() === 0) {
             return null;
         }
 
@@ -761,6 +767,10 @@ class MetaModelTags extends AbstractTags
         $supportedLanguages = null;
         $fallbackLanguage   = null;
 
+        /**
+         * @psalm-suppress DeprecatedMethod
+         * @psalm-suppress TooManyArguments
+         */
         if ($relatedModel instanceof ITranslatedMetaModel) {
             $supportedLanguages = $relatedModel->getLanguages();
             $fallbackLanguage   = $relatedModel->getMainLanguage();
@@ -780,6 +790,10 @@ class MetaModelTags extends AbstractTags
 
         // Retrieve original language only if target language is set.
         if ($currentLanguage) {
+            /**
+             * @psalm-suppress DeprecatedMethod
+             * @psalm-suppress TooManyArguments
+             */
             if ($relatedModel instanceof ITranslatedMetaModel) {
                 $relatedModel->selectLanguage($language);
             } elseif ($relatedModel->isTranslated(false)) {
@@ -793,6 +807,10 @@ class MetaModelTags extends AbstractTags
         }
 
         if ($currentLanguage) {
+            /**
+             * @psalm-suppress DeprecatedMethod
+             * @psalm-suppress TooManyArguments
+             */
             if ($relatedModel instanceof ITranslatedMetaModel) {
                 $relatedModel->selectLanguage($currentLanguage);
             } elseif ($relatedModel->isTranslated(false)) {

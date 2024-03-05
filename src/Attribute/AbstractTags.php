@@ -44,7 +44,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      *
      * @var int
      */
-    private int $widgetMode;
+    private int $widgetMode = 0;
 
     /**
      * Local cached flag if the attribute has been properly configured.
@@ -161,7 +161,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     protected function getSortDirection()
     {
-        return $this->get('tag_sort');
+        return $this->get('tag_sort') ?? '';
     }
 
     /**
@@ -213,7 +213,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
     /**
      * Determine the correct where column to use.
      *
-     * @return string
+     * @return string|null
      */
     protected function getWhereColumn()
     {
@@ -402,8 +402,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     public function searchFor($strPattern)
     {
-        $objFilterRule = new FilterRuleTags($this, $strPattern, $this->connection);
-        return $objFilterRule->getMatchingIds();
+        return (new FilterRuleTags($this, $strPattern, $this->connection))->getMatchingIds() ?? [];
     }
 
     /**
@@ -415,13 +414,9 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      *
      * @return array
      */
-    private function setDataForItem($itemId, $tags, $thisExisting)
+    private function setDataForItem(int $itemId, array $tags, array $thisExisting): array
     {
-        if ($tags === null) {
-            $tagIds = [];
-        } else {
-            $tagIds = \array_keys($tags);
-        }
+        $tagIds = \array_keys($tags);
 
         // First pass, delete all not mentioned anymore.
         $valuesToRemove = \array_diff($thisExisting, $tagIds);
@@ -513,7 +508,8 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
         // sorted ascending by item id.
         $insertValues = [];
         foreach ($itemIds as $itemId) {
-            $insertValues[] = $this->setDataForItem($itemId, $arrValues[$itemId], ($existingTagIds[$itemId] ?? []));
+            $insertValues[] =
+                $this->setDataForItem((int) $itemId, $arrValues[$itemId], ($existingTagIds[$itemId] ?? []));
         }
         $insertValues = \array_merge(...$insertValues);
 
@@ -547,13 +543,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     public function unsetDataFor($arrIds)
     {
-        if (!\is_array($arrIds)) {
-            throw new \RuntimeException(
-                __METHOD__ . '() invalid parameter given! Array of ids is needed.',
-                1
-            );
-        }
-        if (empty($arrIds)) {
+        if ([] === $arrIds) {
             return;
         }
 

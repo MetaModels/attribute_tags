@@ -25,6 +25,7 @@ namespace MetaModels\AttributeTagsBundle\Attribute;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use MetaModels\Attribute\IAttribute;
 use MetaModels\Attribute\ITranslated;
 use MetaModels\Filter\IFilter;
 use MetaModels\Filter\Rules\SearchAttribute;
@@ -105,8 +106,7 @@ class MetaModelTags extends AbstractTags
      */
     protected function checkConfiguration()
     {
-        return parent::checkConfiguration()
-               && (null !== $this->getTagMetaModel());
+        return parent::checkConfiguration();
     }
 
     /**
@@ -307,6 +307,7 @@ class MetaModelTags extends AbstractTags
 
         if ($model->hasAttribute($alias)) {
             $attribute = $model->getAttribute($alias);
+            assert($attribute instanceof IAttribute);
             // It is an attribute, we may search for it.
             foreach ($varValue as $value) {
                 if ($attribute instanceof ITranslated) {
@@ -383,7 +384,7 @@ class MetaModelTags extends AbstractTags
             $builder
                 ->andWhere('t.value_id IN (:valueIds)')
                 ->setParameter('valueIds', $ids, ArrayParameterType::STRING);
-            if ($idList && \is_array($idList)) {
+            if ([] !== $idList) {
                 $builder
                     ->andWhere('t.item_id IN (:itemIds)')
                     ->setParameter('itemIds', $idList, ArrayParameterType::STRING);

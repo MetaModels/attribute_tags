@@ -341,7 +341,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
     public function getFieldDefinition($arrOverrides = [])
     {
         $arrFieldDef      = parent::getFieldDefinition($arrOverrides);
-        $this->widgetMode = $arrOverrides['tag_as_wizard'];
+        $this->widgetMode = (int) $arrOverrides['tag_as_wizard'];
         if ($this->isTreePicker()) {
             $arrFieldDef['inputType']                   = $this->getPickerType();
             $arrFieldDef['eval']['sourceName']          = $this->getTagSource();

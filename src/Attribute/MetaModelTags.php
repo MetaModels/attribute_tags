@@ -418,7 +418,7 @@ class MetaModelTags extends AbstractTags
 
         // If used only or id list given, select only the options that are assigned or assigned to only these items.
         if ($usedOnly || \is_array($idList)) {
-            $this->buildFilterRulesForUsedOnly($filter, $idList ?: []);
+            $this->buildFilterRulesForUsedOnly($filter, $idList ?? []);
         }
 
         $objItems = $this->getTagMetaModel()->findByFilter(
@@ -431,7 +431,7 @@ class MetaModelTags extends AbstractTags
         );
 
         if ($arrCount !== null) {
-            $this->calculateFilterOptionsCount($objItems, $arrCount, $idList);
+            $this->calculateFilterOptionsCount($objItems, $arrCount, $idList ?? []);
         }
 
         return $this->convertItemsToFilterOptions(

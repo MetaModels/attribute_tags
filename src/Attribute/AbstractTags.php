@@ -49,9 +49,9 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
     /**
      * Local cached flag if the attribute has been properly configured.
      *
-     * @var bool
+     * @var bool|null
      */
-    private bool $isProperlyConfigured;
+    private ?bool $isProperlyConfigured = null;
 
     /**
      * The database connection.
@@ -239,7 +239,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     protected function isProperlyConfigured()
     {
-        if (isset($this->isProperlyConfigured)) {
+        if (null !== $this->isProperlyConfigured) {
             return $this->isProperlyConfigured;
         }
 

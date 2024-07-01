@@ -23,6 +23,7 @@
 
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
+use Contao\System;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\IAttribute;
@@ -56,23 +57,23 @@ class MetaModelTags extends AbstractTags
     /**
      * The MetaModel we are referencing on.
      *
-     * @var IMetaModel
+     * @var IMetaModel|null
      */
-    private IMetaModel $objSelectMetaModel;
+    private IMetaModel|null $objSelectMetaModel = null;
 
     /**
      * The factory.
      *
-     * @var IFactory|null
+     * @var IFactory
      */
-    private IFactory|null $factory;
+    private IFactory $factory;
 
     /**
      * Filter setting factory.
      *
-     * @var IFilterSettingFactory|null
+     * @var IFilterSettingFactory
      */
-    private IFilterSettingFactory|null $filterSettingFactory;
+    private IFilterSettingFactory $filterSettingFactory;
 
     /**
      * Instantiate an MetaModel attribute.
@@ -97,7 +98,28 @@ class MetaModelTags extends AbstractTags
     ) {
         parent::__construct($objMetaModel, $arrData, $connection);
 
+        if (null === $factory) {
+            // @codingStandardsIgnoreStart
+            @trigger_error(
+                'Factory is missing. It has to be passed in the constructor. Fallback will be dropped.',
+                E_USER_DEPRECATED
+            );
+            // @codingStandardsIgnoreEnd
+            $factory = System::getContainer()->get('metamodels.factory');
+            assert($factory instanceof IFactory);
+        }
         $this->factory              = $factory;
+
+        if (null === $filterSettingFactory) {
+            // @codingStandardsIgnoreStart
+            @trigger_error(
+                'FilterSettingFactory is missing. It has to be passed in the constructor. Fallback will be dropped.',
+                E_USER_DEPRECATED
+            );
+            // @codingStandardsIgnoreEnd
+            $filterSettingFactory = System::getContainer()->get('metamodels.filter_setting_factory');
+            assert($filterSettingFactory instanceof IFilterSettingFactory);
+        }
         $this->filterSettingFactory = $filterSettingFactory;
     }
 
@@ -116,8 +138,9 @@ class MetaModelTags extends AbstractTags
      */
     public function getTagMetaModel()
     {
-        if (empty($this->objSelectMetaModel)) {
+        if (null === $this->objSelectMetaModel) {
             $this->objSelectMetaModel = $this->factory->getMetaModel($this->getTagSource());
+            assert($this->objSelectMetaModel instanceof IMetaModel);
         }
 
         return $this->objSelectMetaModel;
@@ -126,8 +149,8 @@ class MetaModelTags extends AbstractTags
     /**
      * Retrieve the values with the given ids.
      *
-     * @param string[] $valueIds The ids of the values to retrieve.
-     * @param string[] $attrOnly The attribute names to fetch or empty to fetch all.
+     * @param list<string> $valueIds The ids of the values to retrieve.
+     * @param list<string> $attrOnly The attribute names to fetch or empty to fetch all.
      *
      * @return array
      */
@@ -195,7 +218,7 @@ class MetaModelTags extends AbstractTags
     /**
      * Sort a list of value ids by the option column (non-existent ids will get moved to the end).
      *
-     * @param array $idList The value id list to sort.
+     * @param list<string> $idList The value id list to sort.
      *
      * @return array
      */
@@ -308,14 +331,22 @@ class MetaModelTags extends AbstractTags
         if ($model->hasAttribute($alias)) {
             $attribute = $model->getAttribute($alias);
             assert($attribute instanceof IAttribute);
+            // If translated, we need to determine the languages.
+            $languages = [];
+            if ($attribute instanceof ITranslated) {
+                if ($model instanceof ITranslatedMetaModel) {
+                    $languages = [$model->getLanguage(), $model->getMainLanguage()];
+                } else {
+                    /** @psalm-suppress DeprecatedMethod */
+                    $languages = [$model->getActiveLanguage(), (string) $model->getFallbackLanguage()];
+                }
+                $languages = \array_values(\array_filter($languages, fn(string $value): bool => '' !== $value));
+            }
+
             // It is an attribute, we may search for it.
             foreach ($varValue as $value) {
                 if ($attribute instanceof ITranslated) {
-                    /** @psalm-suppress DeprecatedMethod */
-                    $ids = $attribute->searchForInLanguages(
-                        $value,
-                        [$model->getActiveLanguage(), $model->getFallbackLanguage()]
-                    );
+                    $ids = $attribute->searchForInLanguages($value, $languages);
                 } else {
                     $ids = $attribute->searchFor($value);
                 }
@@ -502,37 +533,35 @@ class MetaModelTags extends AbstractTags
         // Set Filter and co.
         $filterSettings = $this->filterSettingFactory->createCollection($this->get('tag_filter'));
 
-        if ($filterSettings) {
-            $values       = $_GET;
-            $presets      = (array) $this->get('tag_filterparams');
-            $presetNames  = $filterSettings->getParameters();
-            $filterParams = \array_keys($filterSettings->getParameterFilterNames());
-            $processed    = [];
+        $values       = $_GET;
+        $presets      = (array) $this->get('tag_filterparams');
+        $presetNames  = $filterSettings->getParameters();
+        $filterParams = \array_keys($filterSettings->getParameterFilterNames());
+        $processed    = [];
 
-            // We have to use all the preset values we want first.
-            foreach ($presets as $presetName => $preset) {
-                if (\in_array($presetName, $presetNames)) {
-                    $processed[$presetName] = $preset['value'];
-                }
+        // We have to use all the preset values we want first.
+        foreach ($presets as $presetName => $preset) {
+            if (\in_array($presetName, $presetNames)) {
+                $processed[$presetName] = $preset['value'];
             }
-
-            // Now we have to use all FrontEnd filter params, that are either:
-            // * not contained within the presets
-            // * or are overridable.
-            foreach ($filterParams as $parameter) {
-                // Unknown parameter? - next please.
-                if (!\array_key_exists($parameter, $values)) {
-                    continue;
-                }
-
-                // Not a preset or allowed to override? - use value.
-                if ((!\array_key_exists($parameter, $presets)) || $presets[$parameter]['use_get']) {
-                    $processed[$parameter] = $values[$parameter];
-                }
-            }
-
-            $filterSettings->addRules($filter, $processed);
         }
+
+        // Now we have to use all FrontEnd filter params, that are either:
+        // * not contained within the presets
+        // * or are overridable.
+        foreach ($filterParams as $parameter) {
+            // Unknown parameter? - next please.
+            if (!\array_key_exists($parameter, $values)) {
+                continue;
+            }
+
+            // Not a preset or allowed to override? - use value.
+            if ((!\array_key_exists($parameter, $presets)) || $presets[$parameter]['use_get']) {
+                $processed[$parameter] = $values[$parameter];
+            }
+        }
+
+        $filterSettings->addRules($filter, $processed);
     }
 
     /**
@@ -705,46 +734,31 @@ class MetaModelTags extends AbstractTags
             if (\in_array($language, $supportedLanguages, false)) {
                 $currentLanguage = $language;
             } else {
-                $currentLanguage = $fallbackLanguage;
+                $currentLanguage = $fallbackLanguage ?? null;
             }
         }
 
         // Retrieve original language only if target language is set.
-        /**
-         * @psalm-suppress DeprecatedMethod
-         * @psalm-suppress TooManyArguments
-         */
-        if ($currentLanguage) {
-            if ($relatedModel instanceof ITranslatedMetaModel) {
-                $relatedModel->selectLanguage($language);
-            } elseif ($relatedModel->isTranslated(false)) {
-                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
+        if (null !== $currentLanguage) {
+            $this->selectLanguage($relatedModel, $language);
+        }
+        try {
+            // Find the alias in the related metamodels, if there is no found return null.
+            // On more than one result return the first one.
+            $filter = $relatedModel->getEmptyFilter();
+            $attribute = $relatedModel->getAttribute($aliasColumn);
+            assert($attribute instanceof IAttribute);
+            $filter->addFilterRule(new SearchAttribute($attribute, $alias));
+            $items = $relatedModel->findByFilter($filter);
+            if (false === $items->first()) {
+                return null;
+            }
+            return $items->current()->get('id');
+        } finally {
+            if (null !== $currentLanguage) {
+                $this->selectLanguage($relatedModel, $currentLanguage);
             }
         }
-
-        // Find the alias in the related metamodels, if there is no found return null.
-        // On more than one result return the first one.
-        $filter = $relatedModel->getEmptyFilter();
-        $filter->addFilterRule(new SearchAttribute($relatedModel->getAttribute($aliasColumn), $alias));
-        $items = $relatedModel->findByFilter($filter);
-
-        /**
-         * @psalm-suppress DeprecatedMethod
-         * @psalm-suppress TooManyArguments
-         */
-        if ($currentLanguage) {
-            if ($relatedModel instanceof ITranslatedMetaModel) {
-                $relatedModel->selectLanguage($currentLanguage);
-            } elseif ($relatedModel->isTranslated(false)) {
-                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
-            }
-        }
-
-        if ($items->getCount() === 0) {
-            return null;
-        }
-
-        return $items->first()->current()->get('id');
     }
 
     /**
@@ -776,7 +790,8 @@ class MetaModelTags extends AbstractTags
             $supportedLanguages = $relatedModel->getLanguages();
             $fallbackLanguage   = $relatedModel->getMainLanguage();
         } elseif ($relatedModel->isTranslated(false)) {
-            $backendLanguage    = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
+            $backendLanguage = \str_replace('-', '_', $GLOBALS['TL_LANGUAGE']);
+            assert(\is_string($backendLanguage));
             $supportedLanguages = $relatedModel->getAvailableLanguages();
             $fallbackLanguage   = ($relatedModel->getFallbackLanguage() ?? $backendLanguage);
         }
@@ -790,35 +805,37 @@ class MetaModelTags extends AbstractTags
         }
 
         // Retrieve original language only if target language is set.
-        if ($currentLanguage) {
-            /**
-             * @psalm-suppress DeprecatedMethod
-             * @psalm-suppress TooManyArguments
-             */
-            if ($relatedModel instanceof ITranslatedMetaModel) {
-                $relatedModel->selectLanguage($language);
-            } elseif ($relatedModel->isTranslated(false)) {
-                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
+        if (null !== $currentLanguage) {
+            $this->selectLanguage($relatedModel, $language);
+        }
+        try {
+            $item = $relatedModel->findById($id, [$aliasColumn]);
+            if ($item === null) {
+                return null;
+            }
+            return ($item->parseAttribute($aliasColumn)['text'] ?? null);
+        } finally {
+            if (null !== $currentLanguage) {
+                $this->selectLanguage($relatedModel, $currentLanguage);
             }
         }
+    }
 
-        $item = $relatedModel->findById($id, [$aliasColumn]);
-        if ($item === null) {
-            return null;
+    /**
+     * @SuppressWarnings(PHPMD.Superglobals)
+     */
+    private function selectLanguage(IMetaModel $relatedModel, string $language): void
+    {
+        if ($relatedModel instanceof ITranslatedMetaModel) {
+            $relatedModel->selectLanguage($language);
+            return;
         }
-
-        if ($currentLanguage) {
-            /**
-             * @psalm-suppress DeprecatedMethod
-             * @psalm-suppress TooManyArguments
-             */
-            if ($relatedModel instanceof ITranslatedMetaModel) {
-                $relatedModel->selectLanguage($currentLanguage);
-            } elseif ($relatedModel->isTranslated(false)) {
-                $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $currentLanguage);
-            }
+        /**
+         * @psalm-suppress DeprecatedMethod
+         * @psalm-suppress TooManyArguments
+         */
+        if ($relatedModel->isTranslated(false)) {
+            $GLOBALS['TL_LANGUAGE'] = \str_replace('_', '-', $language);
         }
-
-        return ($item->parseAttribute($aliasColumn)['text'] ?? null);
     }
 }

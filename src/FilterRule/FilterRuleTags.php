@@ -30,6 +30,7 @@ namespace MetaModels\AttributeTagsBundle\FilterRule;
 use Contao\System;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use MetaModels\Attribute\IAttribute;
 use MetaModels\AttributeTagsBundle\Attribute\AbstractTags;
 use MetaModels\AttributeTagsBundle\Attribute\MetaModelTags;
 use MetaModels\AttributeTagsBundle\Attribute\Tags;
@@ -56,11 +57,11 @@ class FilterRuleTags extends FilterRule
     protected $value;
 
     /**
-     * The MetaModel we are referencing on.
+     * The MetaModel we are referencing on - gets set upon first call to getTagMetaModel().
      *
-     * @var IMetaModel
+     * @var IMetaModel|null
      */
-    protected $objSelectMetaModel;
+    protected $objSelectMetaModel = null;
 
     /**
      * The database connection.
@@ -86,7 +87,10 @@ class FilterRuleTags extends FilterRule
      */
     protected function getTagMetaModel()
     {
-        if (empty($this->objSelectMetaModel)) {
+        if (null === $this->objSelectMetaModel) {
+            if (!$this->objAttribute instanceof MetaModelTags) {
+                throw new \InvalidArgumentException('Attribute is not a MetaModelTags object.');
+            }
             $this->objSelectMetaModel = $this->objAttribute->getTagMetaModel();
         }
 
@@ -96,7 +100,7 @@ class FilterRuleTags extends FilterRule
     /**
      * {@inheritDoc}
      */
-    public function __construct(AbstractTags $objAttribute, $strValue, Connection $connection = null)
+    public function __construct(AbstractTags $objAttribute, string $strValue, Connection $connection = null)
     {
         parent::__construct();
 
@@ -125,7 +129,7 @@ class FilterRuleTags extends FilterRule
     {
         $strColNameId    = $this->objAttribute->get('tag_id') ?: 'id';
         $strColNameAlias = $this->objAttribute->get('tag_alias');
-        $arrValues       = \is_array($this->value) ? $this->value : \explode(',', $this->value);
+        $arrValues       = \explode(',', $this->value);
 
         if (!$this->isMetaModel()) {
             if ($strColNameAlias) {
@@ -147,10 +151,11 @@ class FilterRuleTags extends FilterRule
             }
 
             $attribute = $this->getTagMetaModel()->getAttribute($strColNameAlias);
+            assert($attribute instanceof IAttribute);
 
             $values = [];
             foreach ($arrValues as $value) {
-                $values[] = \array_values($attribute->searchFor($value) ?? []);
+                $values[] = $attribute->searchFor($value) ?? [];
             }
 
             $arrValues = $this->flatten($values);
@@ -186,15 +191,15 @@ class FilterRuleTags extends FilterRule
     /**
      * Flatten the value id array.
      *
-     * @param array $array The array which should be flattened.
+     * @param list<string|list<string>> $array The array which should be flattened.
      *
-     * @return array
+     * @return list<string>
      */
-    public function flatten(array $array)
+    public function flatten(array $array): array
     {
         $return = [];
-        \array_walk_recursive($array, static function ($item) use (&$return) {
-            $return[] = $item;
+        \array_walk_recursive($array, static function (mixed $item) use (&$return) {
+            $return[] = (string) $item;
         });
         return $return;
     }

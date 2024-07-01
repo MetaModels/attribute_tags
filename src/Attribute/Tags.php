@@ -28,7 +28,6 @@
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver\Exception as DbalDriverException;
 use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Result;
@@ -100,7 +99,7 @@ class Tags extends AbstractTags
         }
         \uasort(
             $result,
-            static function ($value1, $value2) {
+            static function (array $value1, array $value2): int {
                 return ($value1['tag_value_sorting'] - $value2['tag_value_sorting']);
             }
         );
@@ -166,7 +165,7 @@ class Tags extends AbstractTags
             ->setParameter('itemIds', $arrIds, ArrayParameterType::STRING)
             ->orderBy('r.value_sorting');
 
-        if ($additionalWhere = $this->getWhereColumn()) {
+        if ('' !== ($additionalWhere = $this->getWhereColumn() ?? '')) {
             $builder->andWhere($additionalWhere);
         }
 
@@ -215,22 +214,22 @@ class Tags extends AbstractTags
 
         if ($usedOnly) {
             $builder->select('COUNT(t.' . $idColumn . ') AS mm_count');
-            if (!empty($idList)) {
+            if (null !== $idList) {
                 $builder
-                    ->where('r.item_id IN (:valueIds)')
+                    ->where([] !== $idList ? 'r.item_id IN (:valueIds)' : '1=0')
                     ->setParameter('valueIds', $idList, ArrayParameterType::STRING);
             }
         } else {
             $builder->select('COUNT(r.value_id) AS mm_count');
-            if (!empty($idList)) {
+            if (null !== $idList) {
                 $builder
-                    ->where('t.' . $idColumn . ' IN (:valueIds)')
+                    ->where([] !== $idList ? 't.' . $idColumn . ' IN (:valueIds)' : '1=0')
                     ->setParameter('valueIds', $idList, ArrayParameterType::STRING);
             }
         }
         $builder->addSelect('t.*');
 
-        if ($additionalWhere = $this->getWhereColumn()) {
+        if ('' !== ($additionalWhere = $this->getWhereColumn() ?? '')) {
             $builder->andWhere($additionalWhere);
         }
 

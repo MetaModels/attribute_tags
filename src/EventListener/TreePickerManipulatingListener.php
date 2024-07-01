@@ -30,6 +30,9 @@ use MetaModels\IItem;
 
 /**
  * The subscriber for the get filter options call.
+ *
+ * @psalm-suppress InaccessibleProperty - property Widget::orderField is accessible via magic __set/__get.
+ * @psalm-suppress UndefinedMagicPropertyFetch - property Widget::options is accessible via magic __set/__get.
  */
 class TreePickerManipulatingListener
 {

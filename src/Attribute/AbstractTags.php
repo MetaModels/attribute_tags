@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2023 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,7 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2023 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -24,6 +24,7 @@
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
 use Contao\System;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\BaseComplex;
 use MetaModels\Attribute\IAliasConverter;
@@ -33,6 +34,8 @@ use MetaModels\Render\Template;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 abstract class AbstractTags extends BaseComplex implements IAliasConverter
 {
@@ -41,32 +44,32 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      *
      * @var int
      */
-    private $widgetMode;
+    private int $widgetMode = 0;
 
     /**
      * Local cached flag if the attribute has been properly configured.
      *
-     * @var bool
+     * @var bool|null
      */
-    private $isProperlyConfigured;
+    private ?bool $isProperlyConfigured = null;
 
     /**
      * The database connection.
      *
      * @var Connection
      */
-    private $connection;
+    private Connection $connection;
 
     /**
      * Instantiate an MetaModel attribute.
      *
      * Note that you should not use this directly but use the factory classes to instantiate attributes.
      *
-     * @param IMetaModel $objMetaModel The MetaModel instance this attribute belongs to.
-     * @param array      $arrData      The information array, for attribute information, refer to documentation of
-     *                                 table tl_metamodel_attribute and documentation of the certain attribute
-     *                                 classes for information what values are understood.
-     * @param Connection $connection   The database connection.
+     * @param IMetaModel      $objMetaModel The MetaModel instance this attribute belongs to.
+     * @param array           $arrData      The information array, for attribute information, refer to documentation of
+     *                                      table tl_metamodel_attribute and documentation of the certain attribute
+     *                                      classes for information what values are understood.
+     * @param Connection|null $connection   The database connection.
      */
     public function __construct(IMetaModel $objMetaModel, array $arrData = [], Connection $connection = null)
     {
@@ -74,14 +77,14 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
 
         if (null === $connection) {
             // @codingStandardsIgnoreStart
-            @\trigger_error(
+            @trigger_error(
                 'Connection is missing. It has to be passed in the constructor. Fallback will be dropped.',
                 E_USER_DEPRECATED
             );
             // @codingStandardsIgnoreEnd
             $connection = System::getContainer()->get('database_connection');
+            assert($connection instanceof Connection);
         }
-
         $this->connection = $connection;
     }
 
@@ -104,6 +107,10 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     protected function getDatabase()
     {
+        /**
+         * @psalm-suppress DeprecatedInterface
+         * @psalm-suppress DeprecatedMethod
+         */
         return $this->getMetaModel()->getServiceContainer()->getDatabase();
     }
 
@@ -114,7 +121,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     protected function isCheckboxWizard()
     {
-        return $this->widgetMode == 1;
+        return $this->widgetMode === 1;
     }
 
     /**
@@ -124,7 +131,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     protected function isTreePicker()
     {
-        return $this->widgetMode == 2;
+        return $this->widgetMode === 2;
     }
 
     /**
@@ -154,7 +161,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     protected function getSortDirection()
     {
-        return $this->get('tag_sort');
+        return $this->get('tag_sort') ?? '';
     }
 
     /**
@@ -206,7 +213,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
     /**
      * Determine the correct where column to use.
      *
-     * @return string
+     * @return string|null
      */
     protected function getWhereColumn()
     {
@@ -218,7 +225,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      *
      * @return string
      *
-     * @deprecated This was non functional anyway as we had many hardcoded references to 'tl_metamodel_tag_relation'.
+     * @deprecated This was non-functional anyway as we had many hardcoded references to 'tl_metamodel_tag_relation'.
      */
     protected function getReferenceTable()
     {
@@ -232,7 +239,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     protected function isProperlyConfigured()
     {
-        if (isset($this->isProperlyConfigured)) {
+        if (null !== $this->isProperlyConfigured) {
             return $this->isProperlyConfigured;
         }
 
@@ -334,7 +341,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
     public function getFieldDefinition($arrOverrides = [])
     {
         $arrFieldDef      = parent::getFieldDefinition($arrOverrides);
-        $this->widgetMode = $arrOverrides['tag_as_wizard'];
+        $this->widgetMode = (int) $arrOverrides['tag_as_wizard'];
         if ($this->isTreePicker()) {
             $arrFieldDef['inputType']                   = $this->getPickerType();
             $arrFieldDef['eval']['sourceName']          = $this->getTagSource();
@@ -346,10 +353,10 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
             $arrFieldDef['eval']['maxLevel']            = $arrOverrides['tag_maxLevel'];
             $arrFieldDef['eval']['pickerOrderProperty'] = $this->getSortingColumn();
             $arrFieldDef['eval']['pickerSortDirection'] = \strtoupper($this->getSortDirection());
-        } elseif ($this->widgetMode == 1) {
+        } elseif ($this->widgetMode === 1) {
             // If tag as wizard is true, change the input type.
             $arrFieldDef['inputType'] = 'checkboxWizard';
-        } elseif ($this->widgetMode == 3) {
+        } elseif ($this->widgetMode === 3) {
             $arrFieldDef['inputType']      = 'select';
             $arrFieldDef['eval']['chosen'] = true;
         } else {
@@ -395,8 +402,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     public function searchFor($strPattern)
     {
-        $objFilterRule = new FilterRuleTags($this, $strPattern, $this->connection);
-        return $objFilterRule->getMatchingIds();
+        return (new FilterRuleTags($this, $strPattern, $this->connection))->getMatchingIds() ?? [];
     }
 
     /**
@@ -408,13 +414,9 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      *
      * @return array
      */
-    private function setDataForItem($itemId, $tags, $thisExisting)
+    private function setDataForItem(int $itemId, array $tags, array $thisExisting): array
     {
-        if ($tags === null) {
-            $tagIds = [];
-        } else {
-            $tagIds = \array_keys($tags);
-        }
+        $tagIds = \array_keys($tags);
 
         // First pass, delete all not mentioned anymore.
         $valuesToRemove = \array_diff($thisExisting, $tagIds);
@@ -427,7 +429,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
                 ->andWhere('tl_metamodel_tag_relation.value_id IN (:valueIds)')
                 ->setParameter('attId', $this->get('id'))
                 ->setParameter('itemId', $itemId)
-                ->setParameter('valueIds', $valuesToRemove, Connection::PARAM_STR_ARRAY)
+                ->setParameter('valueIds', $valuesToRemove, ArrayParameterType::STRING)
                 ->executeQuery();
         }
 
@@ -492,7 +494,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
             ->select('*')
             ->from('tl_metamodel_tag_relation', 't')
             ->where('t.att_id=:attId')->setParameter('attId', $this->get('id'))
-            ->andWhere('t.item_id IN (:valueIds)')->setParameter('valueIds', $itemIds, Connection::PARAM_STR_ARRAY)
+            ->andWhere('t.item_id IN (:valueIds)')->setParameter('valueIds', $itemIds, ArrayParameterType::STRING)
             ->orderBy('t.item_id', 'ASC')
             ->executeQuery();
 
@@ -502,11 +504,12 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
         }
 
         // Now loop over all items and update the values for them.
-        // NOTE: we can not loop over the original array, as the item ids are not neccessarily
+        // NOTE: we can not loop over the original array, as the item ids are not necessary
         // sorted ascending by item id.
         $insertValues = [];
         foreach ($itemIds as $itemId) {
-            $insertValues[] = $this->setDataForItem($itemId, $arrValues[$itemId], ($existingTagIds[$itemId] ?? []));
+            $insertValues[] =
+                $this->setDataForItem((int) $itemId, $arrValues[$itemId], ($existingTagIds[$itemId] ?? []));
         }
         $insertValues = \array_merge(...$insertValues);
 
@@ -540,13 +543,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
      */
     public function unsetDataFor($arrIds)
     {
-        if (!\is_array($arrIds)) {
-            throw new \RuntimeException(
-                __METHOD__ . '() invalid parameter given! Array of ids is needed.',
-                1
-            );
-        }
-        if (empty($arrIds)) {
+        if ([] === $arrIds) {
             return;
         }
 
@@ -556,7 +553,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
             ->where('tl_metamodel_tag_relation.att_id=:attId')
             ->andWhere('tl_metamodel_tag_relation.item_id IN (:itemIds)')
             ->setParameter('attId', $this->get('id'))
-            ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
+            ->setParameter('itemIds', $arrIds, ArrayParameterType::STRING)
             ->executeQuery();
     }
 }

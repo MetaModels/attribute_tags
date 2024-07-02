@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2021 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -14,7 +14,7 @@
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2022 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -36,6 +36,7 @@ use PHPUnit\Framework\TestCase;
  */
 class TagsTest extends TestCase
 {
+    /** @SuppressWarnings(PHPMD.Superglobals) */
     protected function setUp(): void
     {
         $GLOBALS['TL_LANGUAGE'] = 'en';
@@ -46,9 +47,7 @@ class TagsTest extends TestCase
      * Mock a MetaModel.
      *
      * @param string $tableName        The table name.
-     *
      * @param string $language         The language.
-     *
      * @param string $fallbackLanguage The fallback language.
      *
      * @return IMetaModel
@@ -100,7 +99,6 @@ class TagsTest extends TestCase
             $this->mockConnection(),
             $this->getMockForAbstractClass(IFactory::class),
             $this->getMockForAbstractClass(IFilterSettingFactory::class)
-
         );
         $this->assertInstanceOf(MetaModelTags::class, $text);
     }

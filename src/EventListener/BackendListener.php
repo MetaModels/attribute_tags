@@ -358,7 +358,7 @@ class BackendListener
                 throw new \RuntimeException(
                     \sprintf(
                         '%s %s',
-                        $this->translator->trans('sql_error', [], 'contao_tl_metamodel_attribute'),
+                        $this->translator->trans('sql_error', [], 'tl_metamodel_attribute'),
                         $e->getMessage()
                     )
                 );
@@ -406,16 +406,8 @@ class BackendListener
             [$attributes, $internal] = $this->getAttributeNamesFrom($table);
             \asort($attributes);
 
-            $sql       = $this->translator->trans(
-                'tl_metamodel_attribute.tag_column_type.sql',
-                [],
-                'contao_tl_metamodel_attribute'
-            );
-            $attribute = $this->translator->trans(
-                'tl_metamodel_attribute.tag_column_type.attribute',
-                [],
-                'contao_tl_metamodel_attribute'
-            );
+            $sql       = $this->translator->trans('tag_column_type.sql', [], 'tl_metamodel_attribute');
+            $attribute = $this->translator->trans('tag_column_type.attribute', [], 'tl_metamodel_attribute');
 
             return [
                 $sql       => \array_diff_key(
@@ -475,7 +467,7 @@ class BackendListener
             return [[], []];
         }
         $attributes = [];
-        $internal = [];
+        $internal   = [];
         foreach ($metaModel->getAttributes() as $attribute) {
             $name   = $attribute->getName();
             $column = $attribute->getColName();
@@ -511,9 +503,9 @@ class BackendListener
                         $condition = new PropertyConditionChain(
                             [
                                 new PropertyConditionChain([
-                                    new PropertyValueCondition('type', 'tags'),
-                                    new ConditionTableNameIsMetaModel('tag_table', $mask)
-                                ])
+                                                               new PropertyValueCondition('type', 'tags'),
+                                                               new ConditionTableNameIsMetaModel('tag_table', $mask)
+                                                           ])
                             ],
                             ConditionChainInterface::OR_CONJUNCTION
                         );

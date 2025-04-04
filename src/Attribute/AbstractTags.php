@@ -195,6 +195,7 @@ abstract class AbstractTags extends BaseComplex implements IAliasConverter
         if ($this->isTreePicker() || !$strColNameAlias) {
             $strColNameAlias = $this->getIdColumn();
         }
+
         return $strColNameAlias;
     }
 

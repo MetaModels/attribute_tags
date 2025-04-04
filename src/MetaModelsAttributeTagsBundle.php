@@ -22,6 +22,8 @@
 
 namespace MetaModels\AttributeTagsBundle;
 
+use MetaModels\AttributeTagsBundle\DependencyInjection\CompilerPass\RegisterAttributeInFilterPass;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
@@ -29,4 +31,9 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  */
 class MetaModelsAttributeTagsBundle extends Bundle
 {
+    public function build(ContainerBuilder $container): void
+    {
+        parent::build($container);
+        $container->addCompilerPass(new RegisterAttributeInFilterPass());
+    }
 }

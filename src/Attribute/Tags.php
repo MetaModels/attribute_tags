@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2022 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,17 +20,17 @@
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2022 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
 
 namespace MetaModels\AttributeTagsBundle\Attribute;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Driver\Exception as DbalDriverException;
-use Doctrine\DBAL\Driver\ResultStatement;
 use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\Result;
 
 /**
  * This is the MetaModelAttribute class for handling tag attributes.
@@ -43,7 +43,7 @@ class Tags extends AbstractTags
     protected function checkConfiguration()
     {
         return parent::checkConfiguration()
-               && $this->getConnection()->getSchemaManager()->tablesExist([$this->getTagSource()]);
+               && $this->getConnection()->createSchemaManager()->tablesExist([$this->getTagSource()]);
     }
 
     /**
@@ -87,19 +87,19 @@ class Tags extends AbstractTags
             ->select('t.*')
             ->from($this->getTagSource(), 't')
             ->where('t.' . $alias . ' IN (:aliases)')
-            ->setParameter('aliases', $varValue, Connection::PARAM_STR_ARRAY)
+            ->setParameter('aliases', $varValue, ArrayParameterType::STRING)
             ->orderBy('t.' . $this->getSortingColumn())
-            ->execute();
+            ->executeQuery();
 
         $result = [];
-        foreach ($values->fetchAll(\PDO::FETCH_ASSOC) as $value) {
+        foreach ($values->fetchAllAssociative() as $value) {
             // Adding the sorting from widget.
             $result[$value[$idname]]                      = $value;
             $result[$value[$idname]]['tag_value_sorting'] = \array_search($value[$alias], $varValue);
         }
         \uasort(
             $result,
-            function ($value1, $value2) {
+            static function (array $value1, array $value2): int {
                 return ($value1['tag_value_sorting'] - $value2['tag_value_sorting']);
             }
         );
@@ -162,17 +162,21 @@ class Tags extends AbstractTags
             )
             ->setParameter('attId', $this->get('id'))
             ->where('r.item_id IN (:itemIds)')
-            ->setParameter('itemIds', $arrIds, Connection::PARAM_STR_ARRAY)
+            ->setParameter('itemIds', $arrIds, ArrayParameterType::STRING)
             ->orderBy('r.value_sorting');
 
-        if ($additionalWhere = $this->getWhereColumn()) {
+        if ('' !== ($additionalWhere = $this->getWhereColumn() ?? '')) {
             $builder->andWhere($additionalWhere);
         }
 
-        $statement = $builder->execute();
+        $statement = $builder->executeQuery();
 
         $result = [];
-        foreach ($statement->fetchAll(\PDO::FETCH_ASSOC) as $value) {
+        if ($statement->rowCount() === 0) {
+            return $result;
+        }
+
+        foreach ($statement->fetchAllAssociative() as $value) {
             if (!isset($result[$value[$itemIdColumn]])) {
                 $result[$value[$itemIdColumn]] = [];
             }
@@ -190,9 +194,9 @@ class Tags extends AbstractTags
      * @param array|null $idList   The value id list.
      * @param bool       $usedOnly The flag if only used values shall be returned.
      *
-     * @return ResultStatement
+     * @return Result
      */
-    private function getOptionStatement(?array $idList, bool $usedOnly): ResultStatement
+    private function getOptionStatement(?array $idList, bool $usedOnly): Result
     {
         $idColumn = $this->getIdColumn();
         $builder  = $this->getConnection()->createQueryBuilder();
@@ -210,47 +214,47 @@ class Tags extends AbstractTags
 
         if ($usedOnly) {
             $builder->select('COUNT(t.' . $idColumn . ') AS mm_count');
-            if (!empty($idList)) {
+            if (null !== $idList) {
                 $builder
-                    ->where('r.item_id IN (:valueIds)')
-                    ->setParameter('valueIds', $idList, Connection::PARAM_STR_ARRAY);
+                    ->where([] !== $idList ? 'r.item_id IN (:valueIds)' : '1=0')
+                    ->setParameter('valueIds', $idList, ArrayParameterType::STRING);
             }
         } else {
             $builder->select('COUNT(r.value_id) AS mm_count');
-            if (!empty($idList)) {
+            if (null !== $idList) {
                 $builder
-                    ->where('t.' . $idColumn . ' IN (:valueIds)')
-                    ->setParameter('valueIds', $idList, Connection::PARAM_STR_ARRAY);
+                    ->where([] !== $idList ? 't.' . $idColumn . ' IN (:valueIds)' : '1=0')
+                    ->setParameter('valueIds', $idList, ArrayParameterType::STRING);
             }
         }
         $builder->addSelect('t.*');
 
-        if ($additionalWhere = $this->getWhereColumn()) {
+        if ('' !== ($additionalWhere = $this->getWhereColumn() ?? '')) {
             $builder->andWhere($additionalWhere);
         }
 
-        return $builder->execute();
+        return $builder->executeQuery();
     }
 
     /**
      * Convert the database result into a proper result array.
      *
-     * @param ResultStatement $statement   The database result statement.
+     * @param Result          $statement   The database result statement.
      * @param string          $aliasColumn The name of the alias column to be used.
      * @param string          $valueColumn The name of the value column.
      * @param array|null      $count       The optional count array.
      *
      * @return array
      */
-    private function convertOptionsList(
-        ResultStatement $statement,
+    protected function convertOptionsList(
+        Result $statement,
         string $aliasColumn,
         string $valueColumn,
         ?array &$count = null
     ): array {
         $return = [];
         while ($values = $statement->fetchAssociative()) {
-            if (is_array($count)) {
+            if (\is_array($count)) {
                 $count[$values[$aliasColumn]] = $values['mm_count'];
             }
 
@@ -308,14 +312,14 @@ class Tags extends AbstractTags
                 ->where('t.' . $searchColumn . ' = :search')
                 ->setMaxResults(1)
                 ->setParameter('search', $search)
-                ->execute();
+                ->executeQuery();
 
-            if ($builder->rowCount() == 0) {
+            if ($builder->rowCount() === 0) {
                 return null;
             }
 
             return (string) $builder->fetchOne();
-        } catch (Exception|DbalDriverException $e) {
+        } catch (Exception | DbalDriverException $e) {
             return null;
         }
     }

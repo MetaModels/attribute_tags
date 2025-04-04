@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2021 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,14 +17,18 @@
  * @author     Christopher Boelter <christopher@boelter.eu>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2021 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
 
+use Contao\System;
+use MetaModels\ContaoFrontendEditingBundle\MetaModelsContaoFrontendEditingBundle;
+
 $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['metasubselectpalettes']['attr_id']['tags'] = [
     'presentation' => [
         'tl_class',
+        'be_template',
         'submitOnChange',
         'tag_as_wizard'
     ],
@@ -41,39 +45,58 @@ $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['palettes']['__selector__'][] = 't
 
 $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['metasubselectpalettes']['tag_as_wizard'][2] = [
     'presentation after tag_as_wizard' => [
-        'tag_minLevel', 'tag_maxLevel'
+        'tag_minLevel',
+        'tag_maxLevel'
     ]
 ];
 
 $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_as_wizard'] = [
-    'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard'],
-    'exclude'   => true,
-    'inputType' => 'select',
-    'options'   => [0, 1, 2, 3],
-    'reference' => &$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_as_wizard_reference'],
-    'eval'      => [
-        'tl_class' => 'clr w50',
-        'submitOnChange'     => true,
+    'label'       => 'tag_as_wizard.label',
+    'description' => 'tag_as_wizard.description',
+    'exclude'     => true,
+    'inputType'   => 'select',
+    'options'     => [0, 1, 2, 3],
+    'reference'   => [
+        '0' => 'tag_as_wizard_reference.0',
+        '1' => 'tag_as_wizard_reference.1',
+        '2' => 'tag_as_wizard_reference.2',
+        '3' => 'tag_as_wizard_reference.3',
     ],
-    'sql'       => 'varchar(1) NOT NULL default \'0\''
+    'eval'        => [
+        'tl_class'       => 'clr w50',
+        'submitOnChange' => true,
+    ],
+    'sql'         => 'varchar(1) NOT NULL default \'0\''
 ];
 
 $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_minLevel'] = [
-    'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_minLevel'],
-    'exclude'   => true,
-    'inputType' => 'text',
-    'eval'      => [
+    'label'       => 'tag_minLevel.label',
+    'description' => 'tag_minLevel.description',
+    'exclude'     => true,
+    'inputType'   => 'text',
+    'eval'        => [
         'tl_class' => 'clr w50'
     ],
-    'sql'       => 'int(11) NOT NULL default \'0\''
+    'sql'         => 'int(11) NOT NULL default \'0\''
 ];
 
 $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['fields']['tag_maxLevel'] = [
-    'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_dcasetting']['tag_maxLevel'],
-    'exclude'   => true,
-    'inputType' => 'text',
-    'eval'      => [
+    'label'       => 'tag_maxLevel.label',
+    'description' => 'tag_maxLevel.description',
+    'exclude'     => true,
+    'inputType'   => 'text',
+    'eval'        => [
         'tl_class' => 'w50'
     ],
-    'sql'       => 'int(11) NOT NULL default \'0\''
+    'sql'         => 'int(11) NOT NULL default \'0\''
 ];
+
+// Load configuration for the frontend editing.
+if (\in_array(
+    MetaModelsContaoFrontendEditingBundle::class,
+    System::getContainer()->getParameter('kernel.bundles'),
+    true
+)) {
+    $GLOBALS['TL_DCA']['tl_metamodel_dcasetting']['metasubselectpalettes']['attr_id']['tags']['presentation'][] =
+        'fe_template';
+}

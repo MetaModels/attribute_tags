@@ -20,14 +20,16 @@
 
 namespace MetaModels\AttributeTagsBundle\Test\Attribute;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\DBAL\Statement;
+use Doctrine\DBAL\Result;
 use MetaModels\Attribute\IAttribute;
 use MetaModels\AttributeTagsBundle\Attribute\MetaModelTags;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
 use MetaModels\IFactory;
 use MetaModels\IMetaModel;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -171,7 +173,7 @@ class MetaModelTagsTest extends TestCase
                 $factory,
                 $filterFactory
             ])
-            ->setMethods(['getValuesById'])
+            ->onlyMethods(['getValuesById'])
             ->getMock();
 
         $tags->expects($this->once())->method('getValuesById')->with([10], ['id', 'id', ''])->willReturn([10 => [
@@ -181,14 +183,13 @@ class MetaModelTagsTest extends TestCase
             'tstamp'  => 343094400,
         ]]);
 
-        $statement = $this
-            ->getMockBuilder(Statement::class)
+        $result = $this
+            ->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $statement
+        $result
             ->expects($this->once())
-            ->method('fetchAll')
-            ->with(\PDO::FETCH_COLUMN)
+            ->method('fetchFirstColumn')
             ->willReturn([10]);
 
         $builder = $this
@@ -201,14 +202,15 @@ class MetaModelTagsTest extends TestCase
         $builder
             ->expects($this->once())
             ->method('setParameter')
-            ->with('values', [10], Connection::PARAM_STR_ARRAY)
+            ->with('values', [10], ArrayParameterType::STRING)
             ->willReturn($builder);
         $builder->expects($this->once())->method('orderBy')->with('FIELD(t.id,:values)')->willReturn($builder);
-        $builder->expects($this->once())->method('execute')->willReturn($statement);
+        $builder->expects($this->once())->method('executeQuery')->willReturn($result);
 
         $connection->expects($this->once())->method('createQueryBuilder')->willReturn($builder);
 
         $metaModel = $this->getMockForAbstractClass(IMetaModel::class);
+        $metaModel->expects(self::once())->method('hasAttribute')->with('id')->willReturn(false);
 
         $factory
             ->expects($this->once())
@@ -307,9 +309,9 @@ class MetaModelTagsTest extends TestCase
     /**
      * Mock the database connection.
      *
-     * @return \PHPUnit_Framework_MockObject_MockObject|Connection
+     * @return MockObject|Connection
      */
-    private function mockConnection()
+    private function mockConnection(): MockObject|Connection
     {
         return $this->getMockBuilder(Connection::class)
             ->disableOriginalConstructor()

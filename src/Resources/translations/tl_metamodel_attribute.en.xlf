@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" datatype="plaintext" original="src/Resources/translations/tl_metamodel_attribute.en.xlf">
+    <body>
+      <trans-unit id="typeOptions.tags" resname="typeOptions.tags">
+        <source>Tags</source>
+      </trans-unit>
+      <trans-unit id="tag_table.label" resname="tag_table.label">
+        <source>Database table</source>
+      </trans-unit>
+      <trans-unit id="tag_table.description" resname="tag_table.description">
+        <source>Please select the database table.</source>
+      </trans-unit>
+      <trans-unit id="tag_column.label" resname="tag_column.label">
+        <source>Table column</source>
+      </trans-unit>
+      <trans-unit id="tag_column.description" resname="tag_column.description">
+        <source>Please select the column.</source>
+      </trans-unit>
+      <trans-unit id="tag_id.label" resname="tag_id.label">
+        <source>Tag ID</source>
+      </trans-unit>
+      <trans-unit id="tag_id.description" resname="tag_id.description">
+        <source>Please select a entry for the tag id.</source>
+      </trans-unit>
+      <trans-unit id="tag_alias.label" resname="tag_alias.label">
+        <source>Tag alias</source>
+      </trans-unit>
+      <trans-unit id="tag_alias.description" resname="tag_alias.description">
+        <source>Please select a entry for the tag alias.</source>
+      </trans-unit>
+      <trans-unit id="tag_sorting.label" resname="tag_sorting.label">
+        <source>Tag sorting</source>
+      </trans-unit>
+      <trans-unit id="tag_sorting.description" resname="tag_sorting.description">
+        <source>Please select a entry for the tag sorting.</source>
+      </trans-unit>
+      <trans-unit id="tag_where.label" resname="tag_where.label">
+        <source>SQL</source>
+      </trans-unit>
+      <trans-unit id="tag_where.description" resname="tag_where.description">
+        <source>The list of options can be limited by using SQL as WHERE condition - use the alias 't' for the source table.</source>
+      </trans-unit>
+      <trans-unit id="tag_filter.label" resname="tag_filter.label">
+        <source>Filter</source>
+      </trans-unit>
+      <trans-unit id="tag_filter.description" resname="tag_filter.description">
+        <source>Here you can choose the filter to use.</source>
+      </trans-unit>
+      <trans-unit id="tag_filterparams.label" resname="tag_filterparams.label">
+        <source>Filter parameters</source>
+      </trans-unit>
+      <trans-unit id="tag_filterparams.description" resname="tag_filterparams.description">
+        <source>Here you can choose a default value for the filter.</source>
+      </trans-unit>
+      <trans-unit id="tag_sort.label" resname="tag_sort.label">
+        <source>Sorting direction</source>
+      </trans-unit>
+      <trans-unit id="tag_sort.description" resname="tag_sort.description">
+        <source>The sorting direction.</source>
+      </trans-unit>
+      <trans-unit id="sql_error" resname="sql_error">
+        <source>The SQL query causes an error.</source>
+      </trans-unit>
+      <trans-unit id="tag_table_type.translated" resname="tag_table_type.translated">
+        <source>Translated MetaModels</source>
+      </trans-unit>
+      <trans-unit id="tag_table_type.untranslated" resname="tag_table_type.untranslated">
+        <source>Untranslated MetaModels</source>
+      </trans-unit>
+      <trans-unit id="tag_table_type.sql-table" resname="tag_table_type.sql-table">
+        <source>SQL Table</source>
+      </trans-unit>
+      <trans-unit id="tag_column_type.attribute" resname="tag_column_type.attributee">
+        <source>MetaModel attributes</source>
+      </trans-unit>
+      <trans-unit id="tag_column_type.sql" resname="tag_column_type.sql">
+        <source>SQL table column</source>
+      </trans-unit>
+      <trans-unit id="tag_sort_directions.asc" resname="tag_sort_directions.asc">
+        <source>Ascending</source>
+      </trans-unit>
+      <trans-unit id="tag_sort_directions.desc" resname="tag_sort_directions.desc">
+        <source>Descending</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

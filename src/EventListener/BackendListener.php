@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2022 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,7 +17,7 @@
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Richard Henkenjohann <richardhenkenjohann@googlemail.com>
- * @copyright  2012-2022 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -30,6 +30,7 @@ use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\Event\Encod
 use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\Event\GetPropertyOptionsEvent;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\ConditionChainInterface;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\ConditionInterface;
+use ContaoCommunityAlliance\DcGeneral\DataDefinition\ContainerInterface;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Definition\PalettesDefinitionInterface;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\NotCondition;
 use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\Condition\Property\PropertyConditionChain;
@@ -38,14 +39,19 @@ use ContaoCommunityAlliance\DcGeneral\DataDefinition\Palette\PropertyInterface;
 use ContaoCommunityAlliance\DcGeneral\Factory\Event\BuildDataDefinitionEvent;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use MetaModels\Attribute\IInternal;
 use MetaModels\DcGeneral\DataDefinition\Palette\Condition\Property\ConditionTableNameIsMetaModel;
 use MetaModels\Filter\Setting\IFilterSettingFactory;
 use MetaModels\IFactory;
-use Symfony\Component\Translation\TranslatorInterface;
+use MetaModels\IMetaModel;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Handle events for tl_metamodel_attribute for tag attributes.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class BackendListener
 {
@@ -54,35 +60,35 @@ class BackendListener
      *
      * @var RequestScopeDeterminator
      */
-    private $scopeMatcher;
+    private RequestScopeDeterminator $scopeMatcher;
 
     /**
      * Database connection.
      *
      * @var Connection
      */
-    private $connection;
+    private Connection $connection;
 
     /**
      * MetaModels factory.
      *
      * @var IFactory
      */
-    private $factory;
+    private IFactory $factory;
 
     /**
      * Translator.
      *
      * @var TranslatorInterface
      */
-    private $translator;
+    private TranslatorInterface $translator;
 
     /**
      * Filter setting factory.
      *
      * @var IFilterSettingFactory
      */
-    private $filterSettingFactory;
+    private IFilterSettingFactory $filterSettingFactory;
 
     /**
      * EventListener constructor.
@@ -113,6 +119,8 @@ class BackendListener
      * @param GetPropertyOptionsEvent $event The event.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function getTableNames(GetPropertyOptionsEvent $event)
     {
@@ -137,21 +145,21 @@ class BackendListener
         );
 
         $result = $this->getMetaModelTableNames($translated, $untranslated);
-        foreach ($this->connection->getSchemaManager()->listTableNames() as $table) {
+        foreach ($this->connection->createSchemaManager()->listTableNames() as $table) {
             if (0 !== \strpos($table, 'mm_')) {
                 $result[$sqlTable][$table] = $table;
             }
         }
 
-        if (\is_array($result[$translated])) {
+        if (isset($result[$translated]) && \is_array($result[$translated])) {
             \asort($result[$translated]);
         }
 
-        if (\is_array($result[$untranslated])) {
+        if (isset($result[$untranslated]) && \is_array($result[$untranslated])) {
             \asort($result[$untranslated]);
         }
 
-        if (\is_array($result[$sqlTable])) {
+        if (isset($result[$sqlTable]) && \is_array($result[$sqlTable])) {
             \asort($result[$sqlTable]);
         }
 
@@ -194,7 +202,7 @@ class BackendListener
 
         $result = $this->getColumnNamesFromTable(
             $event->getModel()->getProperty('tag_table'),
-            [Type::INTEGER, Type::BIGINT, Type::SMALLINT]
+            [Types::INTEGER, Types::BIGINT, Types::SMALLINT]
         );
 
         $event->setOptions($result);
@@ -217,16 +225,21 @@ class BackendListener
         if (null === $metaModel = $this->factory->getMetaModel($model->getProperty('tag_table'))) {
             return;
         }
+
         $filters = $this->connection->createQueryBuilder()
             ->select('t.id', 't.name')
             ->from('tl_metamodel_filter', 't')
             ->where('t.pid=:pid')
             ->setParameter('pid', $metaModel->get('id'))
             ->orderBy('t.name')
-            ->execute();
+            ->executeQuery();
+
+        if ([] === ($filterItems = $filters->fetchAllAssociative())) {
+            return;
+        }
 
         $result = [];
-        foreach ($filters->fetchAll(\PDO::FETCH_ASSOC) as $filter) {
+        foreach ($filterItems as $filter) {
             $result[$filter['id']] = $filter['name'];
         }
 
@@ -234,7 +247,7 @@ class BackendListener
     }
 
     /**
-     * Set the sub fields for the sub-dca based in the mm_filter selection.
+     * Set the sub-fields for the sub-dca based in the mm_filter selection.
      *
      * @param BuildWidgetEvent $event The event.
      *
@@ -245,7 +258,12 @@ class BackendListener
         if (!$this->scopeMatcher->currentScopeIsBackend()) {
             return;
         }
-        if (('tl_metamodel_attribute' !== $event->getEnvironment()->getDataDefinition()->getName())
+
+        $dataDefinition = $event->getEnvironment()->getDataDefinition();
+        assert($dataDefinition instanceof ContainerInterface);
+
+        if (
+            ('tl_metamodel_attribute' !== $dataDefinition->getName())
             || ('tag_filterparams' !== $event->getProperty()->getName())
         ) {
             return;
@@ -259,11 +277,8 @@ class BackendListener
         if (empty($filterId)) {
             return;
         }
-        // Get the filter with the given id and check if we got it.
-        // If not return.
-        if (null === $filterSettings = $this->filterSettingFactory->createCollection($filterId)) {
-            return;
-        }
+        // Get the filter with the given id.
+        $filterSettings = $this->filterSettingFactory->createCollection($filterId);
         // Set the subfields.
         $arrExtra['subfields'] = $filterSettings->getParameterDCA();
         $properties->setExtra($arrExtra);
@@ -314,7 +329,11 @@ class BackendListener
             return;
         }
 
-        if (('tl_metamodel_attribute' !== $event->getEnvironment()->getDataDefinition()->getName())
+        $dataDefinition = $event->getEnvironment()->getDataDefinition();
+        assert($dataDefinition instanceof ContainerInterface);
+
+        if (
+            ('tl_metamodel_attribute' !== $dataDefinition->getName())
             || ('tag_where' !== $event->getProperty())
         ) {
             return;
@@ -334,12 +353,12 @@ class BackendListener
                 );
 
             try {
-                $query->execute();
+                $query->executeQuery();
             } catch (\Exception $e) {
                 throw new \RuntimeException(
                     \sprintf(
                         '%s %s',
-                        $this->translator->trans('sql_error', [], 'contao_tl_metamodel_attribute'),
+                        $this->translator->trans('sql_error', [], 'tl_metamodel_attribute'),
                         $e->getMessage()
                     )
                 );
@@ -351,7 +370,6 @@ class BackendListener
      * Retrieve all MetaModels table names.
      *
      * @param string $keyTranslated   The array key to use for translated MetaModels.
-     *
      * @param string $keyUntranslated The array key to use for untranslated MetaModels.
      *
      * @return array
@@ -363,6 +381,8 @@ class BackendListener
 
         foreach ($tables as $table) {
             $metaModel = $this->factory->getMetaModel($table);
+            assert($metaModel instanceof IMetaModel);
+            /** @psalm-suppress DeprecatedMethod */
             if ($metaModel->isTranslated()) {
                 $result[$keyTranslated][$table] = \sprintf('%s (%s)', $metaModel->get('name'), $table);
             } else {
@@ -382,20 +402,12 @@ class BackendListener
      */
     private function getColumnNamesFrom($table)
     {
-        if (0 === \strpos($table, 'mm_')) {
+        if (\str_starts_with($table, 'mm_')) {
             [$attributes, $internal] = $this->getAttributeNamesFrom($table);
             \asort($attributes);
 
-            $sql       = $this->translator->trans(
-                'tl_metamodel_attribute.tag_column_type.sql',
-                [],
-                'contao_tl_metamodel_attribute'
-            );
-            $attribute = $this->translator->trans(
-                'tl_metamodel_attribute.tag_column_type.attribute',
-                [],
-                'contao_tl_metamodel_attribute'
-            );
+            $sql       = $this->translator->trans('tag_column_type.sql', [], 'tl_metamodel_attribute');
+            $attribute = $this->translator->trans('tag_column_type.attribute', [], 'tl_metamodel_attribute');
 
             return [
                 $sql       => \array_diff_key(
@@ -419,15 +431,16 @@ class BackendListener
      */
     private function getColumnNamesFromTable($tableName, $typeFilter = null)
     {
-        if (!$this->connection->getSchemaManager()->tablesExist([$tableName])) {
+        if (!$this->connection->createSchemaManager()->tablesExist([$tableName])) {
             return [];
         }
 
         $result    = [];
-        $fieldList = $this->connection->getSchemaManager()->listTableColumns($tableName);
+        $fieldList = $this->connection->createSchemaManager()->listTableColumns($tableName);
 
+        $typeRegistry = Type::getTypeRegistry();
         foreach ($fieldList as $column) {
-            if (($typeFilter === null) || \in_array($column->getType()->getName(), $typeFilter)) {
+            if (($typeFilter === null) || \in_array($typeRegistry->lookupName($column->getType()), $typeFilter)) {
                 $result[$column->getName()] = $column->getName();
             }
         }
@@ -445,16 +458,16 @@ class BackendListener
      *
      * @param string $metaModelName The name of the MetaModel.
      *
-     * @return array{0: list<string>, 1: list<string>}
+     * @return array{0: array<string, string>, 1: array<string, true>}
      */
     private function getAttributeNamesFrom(string $metaModelName): array
     {
         $metaModel = $this->factory->getMetaModel($metaModelName);
-        $result    = [[], []];
         if (null === $metaModel) {
-            return $result;
+            return [[], []];
         }
-
+        $attributes = [];
+        $internal   = [];
         foreach ($metaModel->getAttributes() as $attribute) {
             $name   = $attribute->getName();
             $column = $attribute->getColName();
@@ -462,26 +475,25 @@ class BackendListener
 
             // Hide virtual types.
             if ($attribute instanceof IInternal) {
-                $result[1][$column] = true;
+                $internal[$column] = true;
                 continue;
             }
 
-            $result[0][$column] = \sprintf('%s [%s, "%s"]', $name, $type, $column);
+            $attributes[$column] = \sprintf('%s [%s, "%s"]', $name, $type, $column);
         }
 
-        return $result;
+        return [$attributes, $internal];
     }
 
     /**
      * Build the data definition palettes.
      *
-     * @param string[]                    $propertyNames The property names which shall be masked.
-     *
+     * @param array<string, bool>         $propertyNames The property names which shall be masked.
      * @param PalettesDefinitionInterface $palettes      The palette definition.
      *
      * @return void
      */
-    private function buildConditions($propertyNames, PalettesDefinitionInterface $palettes)
+    private function buildConditions(array $propertyNames, PalettesDefinitionInterface $palettes): void
     {
         foreach ($palettes->getPalettes() as $palette) {
             foreach ($propertyNames as $propertyName => $mask) {
@@ -515,7 +527,6 @@ class BackendListener
      * Add a condition to a property.
      *
      * @param PropertyInterface  $property  The property.
-     *
      * @param ConditionInterface $condition The condition to add.
      *
      * @return void
@@ -523,8 +534,9 @@ class BackendListener
     private function addCondition($property, $condition)
     {
         $currentCondition = $property->getVisibleCondition();
-        if ((!($currentCondition instanceof ConditionChainInterface))
-            || ($currentCondition->getConjunction() != ConditionChainInterface::OR_CONJUNCTION)
+        if (
+            (!($currentCondition instanceof ConditionChainInterface))
+            || ($currentCondition->getConjunction() !== ConditionChainInterface::OR_CONJUNCTION)
         ) {
             if ($currentCondition === null) {
                 $currentCondition = new PropertyConditionChain([$condition]);
@@ -552,7 +564,10 @@ class BackendListener
             return false;
         }
 
-        return ('tl_metamodel_attribute' === $event->getEnvironment()->getDataDefinition()->getName())
+        $dataDefinition = $event->getEnvironment()->getDataDefinition();
+        assert($dataDefinition instanceof ContainerInterface);
+
+        return ('tl_metamodel_attribute' === $dataDefinition->getName())
                && \in_array($event->getPropertyName(), $fields);
     }
 }

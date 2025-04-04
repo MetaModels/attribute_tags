@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_tags.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,7 +15,7 @@
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_tags/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -26,9 +26,13 @@ use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\Event\Manip
 use ContaoCommunityAlliance\DcGeneral\Contao\View\Contao2BackendView\TreePicker;
 use MetaModels\AttributeTagsBundle\Attribute\AbstractTags;
 use MetaModels\DcGeneral\Data\Model;
+use MetaModels\IItem;
 
 /**
  * The subscriber for the get filter options call.
+ *
+ * @psalm-suppress InaccessibleProperty - property Widget::orderField is accessible via magic __set/__get.
+ * @psalm-suppress UndefinedMagicPropertyFetch - property Widget::options is accessible via magic __set/__get.
  */
 class TreePickerManipulatingListener
 {
@@ -56,7 +60,9 @@ class TreePickerManipulatingListener
             return;
         }
 
-        $attribute = $model->getItem()->getAttribute($widget->strField);
+        $item = $model->getItem();
+        assert($item instanceof IItem);
+        $attribute = $item->getAttribute($widget->strField);
         if (!($attribute instanceof AbstractTags)) {
             return;
         }

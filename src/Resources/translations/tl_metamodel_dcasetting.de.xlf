@@ -1,0 +1,46 @@
+<?xml version="1.0" ?><xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" datatype="plaintext" original="src/Resources/translations/tl_metamodel_rendersetting.en.xlf" target-language="de">
+    <body>
+      <trans-unit id="tag_as_wizard.label" resname="tag_as_wizard.label">
+        <source>Select the widget type</source>
+        <target>Anzeigetyp wählen</target>
+      </trans-unit>
+      <trans-unit id="tag_as_wizard.description" resname="tag_as_wizard.description">
+        <source>Select the desired widget type.</source>
+        <target>Wählen Sie einen gewünschten Anzeigetyp. </target>
+      </trans-unit>
+      <trans-unit id="tag_minLevel.label" resname="tag_minLevel.label">
+        <source>Minimum level in tree picker</source>
+        <target>Niedrigste Ebene in der Baumauswahl.</target>
+      </trans-unit>
+      <trans-unit id="tag_minLevel.description" resname="tag_minLevel.description">
+        <source>If you pass a value &gt;0 here, no item below this level will be selectable.</source>
+        <target>Bei einem Wert &gt; 0 können keine Datensätze mit einem niedrigeren Level als dem eingegebenen selektiert werden.</target>
+      </trans-unit>
+      <trans-unit id="tag_maxLevel.label" resname="tag_maxLevel.label">
+        <source>Maximum level in tree picker</source>
+        <target>Höchste Ebene in der Baumauswahl.</target>
+      </trans-unit>
+      <trans-unit id="tag_maxLevel.description" resname="tag_maxLevel.description">
+        <source>If you pass a value &gt;0 here, no item above this level will be selectable</source>
+        <target>Bei einem Wert &gt; 0 können keine Datensätze mit einem niedrigeren Level als dem eingegebenen selektiert werden.</target>
+      </trans-unit>
+      <trans-unit id="tag_as_wizard_reference.0" resname="tag_as_wizard_reference.0">
+        <source>Display as checkbox menu</source>
+        <target>Anzeige des Checkboxmenü</target>
+      </trans-unit>
+      <trans-unit id="tag_as_wizard_reference.1" resname="tag_as_wizard_reference.1">
+        <source>Display as checkbox wizard</source>
+        <target>Als Checkbox-Wizard anzeigen</target>
+      </trans-unit>
+      <trans-unit id="tag_as_wizard_reference.2" resname="tag_as_wizard_reference.2">
+        <source>Display as picker popup</source>
+        <target>Anzeige als Popup-Picker</target>
+      </trans-unit>
+      <trans-unit id="tag_as_wizard_reference.3" resname="tag_as_wizard_reference.3">
+        <source>Display as tag list</source>
+        <target>Anzeige als Tag-Liste</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
